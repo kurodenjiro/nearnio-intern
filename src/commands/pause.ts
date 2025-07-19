@@ -37,9 +37,9 @@ You haven't set up your preferences yet. Use /setup to configure your bounty not
 
     const message = `⏸️ *Notifications Paused*
 
-You won't receive any new bounty notifications until you resume them.
+You won\'t receive any new bounty notifications until you resume them\\.
 
-Use /resume to start receiving notifications again.`;
+Use /resume to start receiving notifications again\\.`;
 
     await ctx.replyWithMarkdownV2(message, { parse_mode: 'MarkdownV2' });
     

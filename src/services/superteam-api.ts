@@ -29,26 +29,9 @@ export class SuperteamApiService {
     try {
       debug(`Fetching ${projectType} from Superteam API with categories: ${categories.join(', ')}`);
       
-      const baseUrl = this.getBaseUrl();
-      
-      // If "All" is selected, use "All" category, otherwise use the first selected category
-      const category = categories.includes('All') ? 'All' : categories[0] || 'All';
-      
-      // Build URL with query parameters
-      const url = new URL(`${SUPERTEAM_API_BASE}/listings`);
-      url.searchParams.set('context', 'all');
-      url.searchParams.set('tab', projectType);
-      url.searchParams.set('category', category);
-      url.searchParams.set('status', 'open');
-      url.searchParams.set('sortBy', 'Date');
-      url.searchParams.set('order', 'asc');
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-      
       // Get user agent from environment or use default
        
-       const response = await fetch(`${SUPERTEAM_API_BASE}/listings/?context=all&tab=all&category=All&status=open&sortBy=Date&order=asc`);
+       const response = await fetch(`${SUPERTEAM_API_BASE}`);
       
 
       if (!response.ok) {

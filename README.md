@@ -92,7 +92,7 @@ Deploy to Vercel:
 Users can configure:
 
 - **Bounty Range** - Choose from predefined ranges (Micro, Small, Medium, Large, Premium, Enterprise)
-- **Categories** - For You, All, Content, Design, Development, Other
+- **Categories** - All, Content, Design, Development, Other
 - **Project Type** - Bounties or Projects
 
 ## API Integration

@@ -6,10 +6,9 @@ import { startSetup, createBountyRangeKeyboard } from '../handlers/message-handl
 
 const debug = createDebug('bot:setup_command');
 
-// Available categories from Superteam
-const AVAILABLE_CATEGORIES = [
-  'For You',
-  'All',
+  // Available categories from Superteam
+  const AVAILABLE_CATEGORIES = [
+    'All',
   'Content',
   'Design',
   'Development',

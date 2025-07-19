@@ -135,7 +135,7 @@ export class CronjobService {
       
       if (newListings.length === 0) {
         debug('No new listings found since last check');
-        return;
+        //return;
       }
 
       debug(`Found ${newListings.length} new listings, processing notifications`);
@@ -145,6 +145,13 @@ export class CronjobService {
       // Process each user
       for (const user of activeUsers) {
         try {
+          debug(
+            user.projectType,
+            user.categories,
+            user.minBounty,
+            user.maxBounty,
+            lastCheckTime
+          )
           // Get listings that match user preferences
           const matchingListings = await databaseService.getListingsByFilters(
             user.projectType,
@@ -153,6 +160,7 @@ export class CronjobService {
             user.maxBounty,
             lastCheckTime
           );
+          debug(matchingListings)
 
           if (matchingListings.length > 0) {
             // Send notifications for matching listings

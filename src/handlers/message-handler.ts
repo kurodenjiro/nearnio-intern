@@ -15,7 +15,7 @@ const setupStates = new Map<number, {
 
 // Available categories and project types
 const AVAILABLE_CATEGORIES = [
-  'For You', 'All', 'Content', 'Design', 'Development', 'Other'
+  'All', 'Content', 'Design', 'Development', 'Other'
 ];
 
 const PROJECT_TYPES = ['bounties', 'projects'];
@@ -34,9 +34,8 @@ const BOUNTY_RANGES = [
 const createCategoryKeyboard = (): InlineKeyboardMarkup => {
   const keyboard = [];
   
-  // First row: For You and All (exclusive options)
+  // First row: All (exclusive option)
   keyboard.push([
-    { text: 'For You', callback_data: 'category_For You' },
     { text: 'All', callback_data: 'category_All' }
   ]);
   
@@ -257,15 +256,12 @@ const handleCategorySelection = async (ctx: any, state: any, callbackData: strin
   
   if (category === 'all') {
     state.data.categories = AVAILABLE_CATEGORIES;
-  } else if (category === 'For You') {
-    // "For You" is exclusive - clear other selections
-    state.data.categories = ['For You'];
   } else if (category === 'All') {
     // "All" is exclusive - clear other selections
     state.data.categories = ['All'];
   } else if (!state.data.categories.includes(category)) {
-    // Remove "For You" and "All" if selecting specific categories
-    state.data.categories = state.data.categories.filter((cat: string) => cat !== 'For You' && cat !== 'All');
+    // Remove "All" if selecting specific categories
+    state.data.categories = state.data.categories.filter((cat: string) => cat !== 'All');
     state.data.categories.push(category);
   }
   

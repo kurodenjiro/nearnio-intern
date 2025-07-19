@@ -3,6 +3,50 @@ import { SuperteamListing, UserPreferences } from '../types/superteam';
 
 const debug = createDebug('bot:database');
 
+// Skill to category mapping
+const skillCategoryMap: Record<string, string> = {
+  // DEV category
+  'FRONTEND': 'DEV',
+  'BACKEND': 'DEV', 
+  'BLOCKCHAIN': 'DEV',
+  'MOBILE': 'DEV',
+  'DEV': 'DEV',
+  
+  // DESIGN category
+  'UI/UX': 'DESIGN',
+  'GRAPHIC': 'DESIGN',
+  'GAME': 'DESIGN',
+  'DESIGN' :'DESIGN',
+  
+  // CONTENT category
+  'RESEARCH': 'CONTENT',
+  'SOCIAL': 'CONTENT',
+  'CONTENT': 'CONTENT',
+  
+  // GROWTH category
+  'BUSINESS_DEVELOPMENT': 'GROWTH',
+  'MARKETING': 'GROWTH',
+  'GROWTH': 'GROWTH',
+  
+  // COMMUNITY category
+  'COMMUNITY_MANAGER': 'COMMUNITY',
+  'COMMUNITY': 'COMMUNITY',
+  'SOCIAL_MODERATOR': 'COMMUNITY',
+};
+
+// Function to map skills to category
+function mapSkillsToCategory(skills: any[]): string {
+  for (const skillObj of skills) {
+    if (skillObj.skills) {
+      const category = skillCategoryMap[skillObj.skills.toUpperCase()];
+      if (category) {
+        return category;
+      }
+    }
+  }
+  return 'OTHER'; // Default category if no skill matches
+}
+
 // Temporary in-memory storage for development
 const inMemoryStorage = {
   listings: new Map<string, any>(),
@@ -45,29 +89,54 @@ export class DatabaseService {
       
       for (const listing of listings) {
         try {
-          const listingData = {
-            title: listing.title,
-            rewardAmount: listing.rewardAmount,
-            token: listing.token,
-            deadline: new Date(listing.deadline),
-            type: listing.type,
-            status: listing.status,
-            isWinnersAnnounced: listing.isWinnersAnnounced,
-            isFeatured: listing.isFeatured,
-            compensationType: listing.compensationType,
-            minRewardAsk: listing.minRewardAsk,
-            maxRewardAsk: listing.maxRewardAsk,
-            winnersAnnouncedAt: listing.winnersAnnouncedAt ? new Date(listing.winnersAnnouncedAt) : null,
-            commentsCount: listing._count.Comments,
-            submissionCount: listing._count.Submission,
-            sponsorName: listing.sponsor.name,
-            sponsorSlug: listing.sponsor.slug,
-            sponsorLogo: listing.sponsor.logo,
-            sponsorIsVerified: listing.sponsor.isVerified,
-            sponsorSt: listing.sponsor.st,
-            syncedAt: new Date(),
-          };
-
+          // Fetch additional data from detail page
+          let description = '';
+          let skills: any[] = [];
+          
+          if (listing.sequentialId && listing.sponsor?.slug) {
+            try {
+              const detailUrl = `https://nearn.io/_next/data/${process.env.NEXT_DATA_HASH}/${listing.sponsor.slug}/${listing.sequentialId}.json`;
+              const detailResponse = await fetch(detailUrl);
+              
+              if (detailResponse.ok) {
+                const detailData = await detailResponse.json();
+                if (detailData.pageProps?.bounty) {
+                  description = detailData.pageProps.bounty.description || '';
+                  skills = detailData.pageProps.bounty.skills || [];
+                }
+              }
+            } catch (error) {
+              debug(`Error fetching detail data for listing ${listing.slug}:`, error);
+            }
+          }
+          
+                      const listingData = {
+              title: listing.title,
+              rewardAmount: listing.rewardAmount,
+              token: listing.token,
+              deadline: new Date(listing.deadline),
+              type: listing.type,
+              status: listing.status,
+              isWinnersAnnounced: listing.isWinnersAnnounced,
+              isFeatured: listing.isFeatured,
+              compensationType: listing.compensationType,
+              minRewardAsk: listing.minRewardAsk,
+              maxRewardAsk: listing.maxRewardAsk,
+              winnersAnnouncedAt: listing.winnersAnnouncedAt ? new Date(listing.winnersAnnouncedAt) : null,
+              commentsCount: listing._count.Comments,
+              submissionCount: listing._count.Submission,
+              sequentialId: listing.sequentialId,
+              description,
+              skills,
+              mappedCategory: mapSkillsToCategory(skills),
+              sponsorName: listing.sponsor.name,
+              sponsorSlug: listing.sponsor.slug,
+              sponsorLogo: listing.sponsor.logo,
+              sponsorIsVerified: listing.sponsor.isVerified,
+              sponsorSt: listing.sponsor.st,
+              syncedAt: new Date(),
+            };
+            debug(listingData)
           if (this.usePrisma && this.prisma) {
             // Use slug as id if id is missing
             const listingId = listing.id || listing.slug;
@@ -137,50 +206,41 @@ export class DatabaseService {
     sinceDate?: Date
   ): Promise<any[]> {
     try {
+      // Get all listings first
+      let allListings: any[] = [];
+      
       if (this.usePrisma && this.prisma) {
-        const where: any = {
-          type: projectType,
-        };
-
-        if (sinceDate) {
-          where.syncedAt = {
-            gte: sinceDate,
-          };
-        }
-
-        if (maxBounty) {
-          where.rewardAmount = {
-            gte: minBounty,
-            lte: maxBounty,
-          };
-        } else {
-          where.rewardAmount = {
-            gte: minBounty,
-          };
-        }
-
-        const listings = await this.prisma.listing.findMany({
-          where,
+        allListings = await this.prisma.listing.findMany({
           orderBy: {
             syncedAt: 'desc',
           },
         });
-
-        return listings;
       } else {
         // In-memory storage
-        const listings = Array.from(inMemoryStorage.listings.values())
-          .filter((listing: any) => {
-            if (listing.type !== projectType) return false;
-            if (sinceDate && listing.syncedAt < sinceDate) return false;
-            if (listing.rewardAmount < minBounty) return false;
-            if (maxBounty && listing.rewardAmount > maxBounty) return false;
-            return true;
-          })
-          .sort((a: any, b: any) => b.syncedAt - a.syncedAt);
-        
-        return listings;
+        allListings = Array.from(inMemoryStorage.listings.values());
       }
+
+      // Filter listings in memory
+      const filteredListings = allListings.filter((listing: any) => {
+        // Filter by project type
+        if (listing.type !== projectType) return false;
+        
+        // Filter by categories (if specified and listing has mapped category)
+        if (categories.length > 0 && listing.mappedCategory) {
+          if (!categories.includes(listing.mappedCategory)) return false;
+        }
+        
+        // Filter by date if specified
+        if (sinceDate && listing.syncedAt < sinceDate) return false;
+        
+        // Filter by bounty range
+        if (listing.rewardAmount < minBounty) return false;
+        if (maxBounty && listing.rewardAmount > maxBounty) return false;
+        
+        return true;
+      });
+
+      return filteredListings;
     } catch (error) {
       debug('Error getting listings by filters:', error);
       return [];

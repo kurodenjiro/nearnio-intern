@@ -1,5 +1,6 @@
 export interface SuperteamListing {
   id: string;
+  sequentialId?: string;
   title: string;
   rewardAmount: number;
   token: string;

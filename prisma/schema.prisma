@@ -12,6 +12,7 @@ datasource db {
 
 model Listing {
   id                  String   @id
+  sequentialId        Int?
   title               String
   rewardAmount        Float
   token               String
@@ -27,6 +28,9 @@ model Listing {
   winnersAnnouncedAt  DateTime?
   commentsCount       Int      @default(0)
   submissionCount     Int      @default(0)
+  description         String?  // Optional description from detail page
+  skills              Json?    // Array of skill objects from detail page
+  mappedCategory      String?  // Category mapped from skills
   sponsorName         String
   sponsorSlug         String
   sponsorLogo         String

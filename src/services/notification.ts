@@ -34,29 +34,30 @@ export class NotificationService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  public createListingMessage(listing: SuperteamListing): string {
-    const bountyAmount = this.formatBountyAmount(listing);
-    const deadline = this.formatDeadline(listing.deadline);
-    const submissions = this.formatSubmissions(listing._count.Submission);
-    const sponsorVerified = listing.sponsor.isVerified ? '✅' : '';
+  public createListingMessage(listing: any): string {
+    const bountyAmount = `${listing.rewardAmount} ${listing.token}`;
+    const deadline = new Date(listing.deadline).toLocaleDateString();
+    const submissions = `${listing.submissionCount} submission${listing.submissionCount !== 1 ? 's' : ''}`;
+    const sponsorVerified = listing.sponsorIsVerified ? '✅' : '';
+    const category = listing.mappedCategory ? `\n🏷️ *Category:* ${escapeMarkdownV2(listing.mappedCategory)}` : '';
 
     const message = `🎯 *New Bounty Alert\\!*
 
 *${escapeMarkdownV2(listing.title)}*
 
 💰 *Reward:* ${escapeMarkdownV2(bountyAmount)}
-🏢 *Sponsor:* ${escapeMarkdownV2(listing.sponsor.name)} ${sponsorVerified}
+🏢 *Sponsor:* ${escapeMarkdownV2(listing.sponsorName)} ${sponsorVerified}
 📅 *Deadline:* ${escapeMarkdownV2(deadline)}
-📊 *Type:* ${escapeMarkdownV2(listing.type)}
+📊 *Type:* ${escapeMarkdownV2(listing.type)}${category}
 📝 *Submissions:* ${escapeMarkdownV2(submissions)}
 🏷️ *Status:* ${escapeMarkdownV2(listing.status)}
 
-🔗 [View Details](https://earn\\.superteam\\.fun/bounty/${escapeMarkdownV2(listing.slug)})`;
+🔗 [View Details](https://nearn\\.io/${escapeMarkdownV2(listing.sponsorSlug)}/${escapeMarkdownV2(listing.sequentialId || listing.slug)})`;
 
     return message;
   }
 
-  private matchesUserPreferences(listing: SuperteamListing, preferences: UserPreferences): boolean {
+  private matchesUserPreferences(listing: any, preferences: UserPreferences): boolean {
     // Check bounty amount
     const bountyAmount = listing.rewardAmount;
     if (bountyAmount < preferences.minBounty) {
@@ -66,8 +67,17 @@ export class NotificationService {
       return false;
     }
 
-    // For now, we'll skip category and skills matching since the API doesn't provide them
-    // In the future, we could add tags or other fields for filtering
+    // Check project type
+    if (listing.type !== preferences.projectType) {
+      return false;
+    }
+
+    // Check categories if specified and listing has mapped category
+    if (preferences.categories.length > 0 && listing.mappedCategory) {
+      if (!preferences.categories.includes(listing.mappedCategory)) {
+        return false;
+      }
+    }
     
     return true;
   }
@@ -88,7 +98,7 @@ export class NotificationService {
 
   async sendNotificationsForListings(
     bot: any,
-    listings: SuperteamListing[],
+    listings: any[],
     allPreferences: UserPreferences[]
   ): Promise<void> {
     debug(`Processing ${listings.length} listings for ${allPreferences.length} users`);
