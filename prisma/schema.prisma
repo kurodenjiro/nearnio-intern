@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Listing {
+  id                  String   @id
+  title               String
+  rewardAmount        Float
+  token               String
+  deadline            DateTime
+  type                String
+  status              String
+  slug                String   @unique
+  isWinnersAnnounced  Boolean  @default(false)
+  isFeatured          Boolean  @default(false)
+  compensationType    String
+  minRewardAsk        Float?
+  maxRewardAsk        Float?
+  winnersAnnouncedAt  DateTime?
+  commentsCount       Int      @default(0)
+  submissionCount     Int      @default(0)
+  sponsorName         String
+  sponsorSlug         String
+  sponsorLogo         String
+  sponsorIsVerified   Boolean  @default(false)
+  sponsorSt           Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  syncedAt            DateTime @default(now())
+
+  @@map("listings")
+}
+
+model UserPreference {
+  id          Int      @id @default(autoincrement())
+  userId      BigInt   @unique
+  chatId      BigInt
+  categories  String[] // Array of category strings
+  minBounty   Float
+  maxBounty   Float?
+  projectType String   @default("bounties") // 'bounties' or 'projects'
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("user_preferences")
+}
+
+model NotificationLog {
+  id        Int      @id @default(autoincrement())
+  userId    BigInt
+  listingId String
+  sentAt    DateTime @default(now())
+  success   Boolean  @default(true)
+  error     String?
+
+  @@map("notification_logs")
+}
+
+model SystemConfig {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("system_config")
+} 
