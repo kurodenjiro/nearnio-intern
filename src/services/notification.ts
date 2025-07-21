@@ -39,7 +39,14 @@ export class NotificationService {
     const title = listing.title || 'Untitled Listing';
     const rewardAmount = listing.rewardAmount || 0;
     const token = listing.token || 'USD';
-    const deadline = listing.deadline ? new Date(listing.deadline).toLocaleDateString() : 'No deadline';
+    const deadline = listing.deadline ? new Date(listing.deadline).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    }) : 'No deadline';
     const submissionCount = listing.submissionCount || 0;
     const sponsorName = listing.sponsorName || 'Unknown Sponsor';
     const sponsorSlug = listing.sponsorSlug || '';
@@ -53,6 +60,19 @@ export class NotificationService {
     const sponsorVerified = listing.sponsorIsVerified ? '✅' : '';
     const category = listing.mappedCategory ? `\n🏷️ *Category:* ${escapeMarkdownV2(listing.mappedCategory)}` : '';
 
+    // Format skills and subskills
+    let skillsText = '';
+    if (listing.skills && Array.isArray(listing.skills) && listing.skills.length > 0) {
+      const skillsList = listing.skills.map((skill: any) => {
+        let skillText = `• ${escapeMarkdownV2(skill.skills || 'Unknown Skill')}`;
+        if (skill.subskills && Array.isArray(skill.subskills) && skill.subskills.length > 0) {
+          skillText += ` \\(${escapeMarkdownV2(skill.subskills.join(', '))}\\)`;
+        }
+        return skillText;
+      });
+      skillsText = `\n🛠️ *Skills:*\n${skillsList.join('\n')}`;
+    }
+
     const message = `🎯 *New Bounty Alert\\!*
 
 *${escapeMarkdownV2(title)}*
@@ -62,7 +82,7 @@ export class NotificationService {
 📅 *Deadline:* ${escapeMarkdownV2(deadline)}
 📊 *Type:* ${escapeMarkdownV2(listingType)}${category}
 📝 *Submissions:* ${escapeMarkdownV2(submissions)}
-🏷️ *Status:* ${escapeMarkdownV2(status)}`;
+🏷️ *Status:* ${escapeMarkdownV2(status)}${skillsText}`;
 
     // Create inline keyboard for view details button
     const keyboard = {

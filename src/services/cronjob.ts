@@ -38,7 +38,7 @@ export class CronjobService {
     this.isRunning = true;
 
     // Get cron schedules from environment variables
-    const syncSchedule = process.env.SYNC_CRON_SCHEDULE || '*/60 * * * *'; // Every 15 minutes
+    const syncSchedule = process.env.SYNC_CRON_SCHEDULE || '*/1 * * * *'; // Every 15 minutes
     const notificationSchedule = process.env.NOTIFICATION_CRON_SCHEDULE || '*/1 * * * *'; // Every 5 minutes
     
     // Start sync cron job

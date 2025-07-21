@@ -60,6 +60,14 @@ const BOUNTY_RANGES = [
   { text: '>1000$', min: 1001, max: undefined, name: 'Enterprise Bounties' }
 ];
 
+// Minimum bounty options (no maximum)
+const MIN_BOUNTY_RANGES = [
+  { text: '0$+', min: 0, max: undefined, name: 'Any Amount' },
+  { text: '100$+', min: 100, max: undefined, name: '100$ Minimum' },
+  { text: '250$+', min: 250, max: undefined, name: '250$ Minimum' },
+  { text: '500$+', min: 500, max: undefined, name: '500$ Minimum' }
+];
+
 // Helper function to create category selection keyboard
 const createCategoryKeyboard = (): InlineKeyboardMarkup => {
   const keyboard = [];
@@ -92,10 +100,37 @@ const createCategoryKeyboard = (): InlineKeyboardMarkup => {
 
 // Helper function to create bounty range selection keyboard
 const createBountyRangeKeyboard = (): InlineKeyboardMarkup => {
-  const keyboard = BOUNTY_RANGES.map(range => [{
-    text: `${range.text} (${range.name})`,
-    callback_data: `bounty_range_${range.min}_${range.max || 'none'}`
-  }]);
+  const keyboard = [];
+  
+  // First row: Range options
+  keyboard.push([
+    { text: '0-50$ (Micro)', callback_data: 'bounty_range_0_50' },
+    { text: '50$-100$ (Small)', callback_data: 'bounty_range_51_100' }
+  ]);
+  
+  // Second row: More range options
+  keyboard.push([
+    { text: '100$-250$ (Medium)', callback_data: 'bounty_range_101_250' },
+    { text: '250$-500$ (Large)', callback_data: 'bounty_range_251_500' }
+  ]);
+  
+  // Third row: Premium and Enterprise
+  keyboard.push([
+    { text: '500$-1000$ (Premium)', callback_data: 'bounty_range_501_1000' },
+    { text: '>1000$ (Enterprise)', callback_data: 'bounty_range_1001_none' }
+  ]);
+  
+  // Fourth row: Minimum options
+  keyboard.push([
+    { text: '0$+ (Any Amount)', callback_data: 'bounty_range_0_none' },
+    { text: '100$+ (Min 100$)', callback_data: 'bounty_range_100_none' }
+  ]);
+  
+  // Fifth row: More minimum options
+  keyboard.push([
+    { text: '250$+ (Min 250$)', callback_data: 'bounty_range_250_none' },
+    { text: '500$+ (Min 500$)', callback_data: 'bounty_range_500_none' }
+  ]);
   
   return { inline_keyboard: keyboard };
 };
@@ -180,7 +215,15 @@ const handleBountyRangeSelection = async (ctx: any, state: any, callbackData: st
   state.step = 'categories';
   
   const maxText = maxBounty ? `$${maxBounty}` : 'No maximum';
-  const rangeName = BOUNTY_RANGES.find(range => range.min === minBounty && range.max === maxBounty)?.name || 'Custom Range';
+  
+  // Find range name from either BOUNTY_RANGES or MIN_BOUNTY_RANGES
+  let rangeName = BOUNTY_RANGES.find(range => range.min === minBounty && range.max === maxBounty)?.name;
+  if (!rangeName) {
+    rangeName = MIN_BOUNTY_RANGES.find(range => range.min === minBounty && range.max === maxBounty)?.name;
+  }
+  if (!rangeName) {
+    rangeName = 'Custom Range';
+  }
   
   await ctx.reply(
     `✅ Bounty range set to: $${minBounty} \\- ${escapeMarkdownV2(maxText)} \\(${escapeMarkdownV2(rangeName)}\\)\n\n` +
