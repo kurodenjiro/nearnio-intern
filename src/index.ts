@@ -13,8 +13,7 @@ import { stop } from './commands/stop';
 import { stats } from './commands/stats';
 import { edit } from './commands/edit';
 
-// Import services
-import { CronjobService } from './services/cronjob';
+// Import handlers
 import { handleMessage, handleCallbackQuery } from './handlers/message-handler';
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
@@ -47,10 +46,6 @@ bot.on('message', async (ctx) => {
 bot.on('callback_query', async (ctx) => {
   await handleCallbackQuery(ctx);
 });
-
-// Initialize cronjob service (only for manual operations)
-const cronjobService = CronjobService.getInstance();
-cronjobService.setBot(bot);
 
 // Production mode (Vercel)
 export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
