@@ -3,7 +3,7 @@ import { SuperteamApiResponse, SuperteamListing } from '../types/superteam';
 
 const debug = createDebug('bot:superteam-api');
 
-const SUPERTEAM_API_BASE = process.env.SUPERTEAM_API_BASE || 'https://nearn.io/api';
+const SUPERTEAM_API_BASE = process.env.SUPERTEAM_API_BASE || `${process.env.SERVER_URL || 'https://nearn.io'}/api`;
 
 export class SuperteamApiService {
   private static instance: SuperteamApiService;

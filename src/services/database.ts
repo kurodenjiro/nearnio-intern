@@ -97,7 +97,7 @@ export class DatabaseService {
           
           if (listing.sequentialId && listing.sponsor?.slug) {
             try {
-              const detailUrl = `https://nearn.io/_next/data/${process.env.NEXT_DATA_HASH}/${listing.sponsor.slug}/${listing.sequentialId}.json`;
+              const detailUrl = `${process.env.SERVER_URL || 'https://nearn.io'}/_next/data/${process.env.NEXT_DATA_HASH}/${listing.sponsor.slug}/${listing.sequentialId}.json`;
               const detailResponse = await fetch(detailUrl);
               
               if (detailResponse.ok) {

@@ -89,7 +89,7 @@ export class NotificationService {
       inline_keyboard: [[
         {
           text: '🔗 View Details',
-          url: `https://nearn.io/${sponsorSlug}/${sequentialId || listingSlug}`
+          url: `${process.env.SERVER_URL || 'https://nearn.io'}/${sponsorSlug}/${sequentialId || listingSlug}`
         }
       ]]
     };
