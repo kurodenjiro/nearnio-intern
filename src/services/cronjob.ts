@@ -1,5 +1,4 @@
 import createDebug from 'debug';
-import * as cron from 'node-cron';
 import { Telegraf } from 'telegraf';
 import { SuperteamApiService } from './superteam-api';
 import { DatabaseService } from './database';
@@ -12,9 +11,6 @@ const debug = createDebug('bot:cronjob');
 export class CronjobService {
   private static instance: CronjobService;
   private bot: Telegraf | null = null;
-  private syncCronJob: cron.ScheduledTask | null = null;
-  private notificationCronJob: cron.ScheduledTask | null = null;
-  private reminderCronJob: cron.ScheduledTask | null = null;
   private isRunning = false;
 
   private constructor() {}
@@ -31,59 +27,17 @@ export class CronjobService {
   }
 
   public start(): void {
-    if (this.isRunning) {
-      debug('Cronjob service is already running');
-      return;
-    }
-
-    debug('Starting cronjob service');
+    debug('Cronjob service initialized (Vercel cron jobs will handle scheduling)');
     this.isRunning = true;
-
-    // Get cron schedules from environment variables
-    const syncSchedule = process.env.SYNC_CRON_SCHEDULE || '*/1 * * * *'; // Every 15 minutes
-    const notificationSchedule = process.env.NOTIFICATION_CRON_SCHEDULE || '*/1 * * * *'; // Every 5 minutes
-    const reminderSchedule = process.env.REMINDER_CRON_SCHEDULE || '*/5 * * * *'; // Every 5 minutes
-    
-    // Start sync cron job
-    this.syncCronJob = cron.schedule(syncSchedule, async () => {
-      await this.syncApiDataToDatabase();
-    });
-
-    // Start notification cron job
-    this.notificationCronJob = cron.schedule(notificationSchedule, async () => {
-      await this.sendNotificationsFromDatabase();
-    });
-
-    // Start reminder cron job
-    this.reminderCronJob = cron.schedule(reminderSchedule, async () => {
-      await this.sendReminderNotifications();
-    });
-
-    debug(`Cronjob service started - Sync: ${syncSchedule}, Notifications: ${notificationSchedule}, Reminders: ${reminderSchedule}`);
   }
 
   public stop(): void {
-    if (this.syncCronJob) {
-      this.syncCronJob.stop();
-      this.syncCronJob = null;
-    }
-    
-    if (this.notificationCronJob) {
-      this.notificationCronJob.stop();
-      this.notificationCronJob = null;
-    }
-
-    if (this.reminderCronJob) {
-      this.reminderCronJob.stop();
-      this.reminderCronJob = null;
-    }
-    
     this.isRunning = false;
     debug('Cronjob service stopped');
   }
 
   // Step 1: Sync API data to database
-  private async syncApiDataToDatabase(): Promise<void> {
+  public async syncApiDataToDatabase(): Promise<void> {
     try {
       debug('Starting API data sync to database...');
       
@@ -119,7 +73,7 @@ export class CronjobService {
   }
 
   // Step 2: Send notifications from database
-  private async sendNotificationsFromDatabase(): Promise<void> {
+  public async sendNotificationsFromDatabase(): Promise<void> {
     if (!this.bot) {
       debug('Bot not set, skipping notification check');
       return;
@@ -231,7 +185,7 @@ export class CronjobService {
   }
 
   // Send reminder notifications
-  private async sendReminderNotifications(): Promise<void> {
+  public async sendReminderNotifications(): Promise<void> {
     try {
       if (!this.bot) {
         debug('Bot not initialized, skipping reminder notifications');

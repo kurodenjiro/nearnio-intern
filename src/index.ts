@@ -48,22 +48,12 @@ bot.on('callback_query', async (ctx) => {
   await handleCallbackQuery(ctx);
 });
 
-// Initialize cronjob service
+// Initialize cronjob service (only for manual operations)
 const cronjobService = CronjobService.getInstance();
 cronjobService.setBot(bot);
 
-// Start cronjob service in development mode
-if (ENVIRONMENT !== 'production') {
-  cronjobService.start();
-}
-
 // Production mode (Vercel)
 export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
-  // Start cronjob service if not already running
-  if (!cronjobService.isActive()) {
-    cronjobService.start();
-  }
-  
   await production(req, res, bot);
 };
 
