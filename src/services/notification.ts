@@ -215,7 +215,7 @@ export class NotificationService {
   }
 
   async sendWelcomeMessage(ctx: Context): Promise<void> {
-    const message = `🎉 *Welcome to Superteam Bounty Notifications\\!*
+    const message = `🎉 *Welcome to Nearn Bounty Notifications\\!*
 
 I'll help you stay updated with new bounties that match your preferences\\.
 
