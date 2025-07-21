@@ -3,10 +3,18 @@
  * @param text - The text to escape
  * @returns Escaped text safe for MarkdownV2
  */
-export function escapeMarkdownV2(text: string): string {
+export function escapeMarkdownV2(text: any): string {
+  // Handle null, undefined, or non-string values
+  if (text === null || text === undefined) {
+    return '';
+  }
+  
+  // Convert to string if it's not already
+  const textStr = String(text);
+  
   const specialChars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!'];
   
-  let escaped = text;
+  let escaped = textStr;
   for (const char of specialChars) {
     escaped = escaped.replace(new RegExp(`\\${char}`, 'g'), `\\${char}`);
   }

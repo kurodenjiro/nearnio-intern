@@ -7,6 +7,36 @@ import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 
 const debug = createDebug('bot:message-handler');
 
+// Category mapping function to convert user-friendly names to internal format
+const mapUserCategoryToInternal = (userCategory: string): string => {
+  const categoryMap: Record<string, string> = {
+    'Development': 'DEV',
+    'Design': 'DESIGN',
+    'Content': 'CONTENT',
+    'Growth': 'GROWTH',
+    'Community': 'COMMUNITY',
+    'Other': 'OTHER',
+    'All': 'All'
+  };
+  
+  return categoryMap[userCategory] || userCategory;
+};
+
+// Reverse mapping function to convert internal format to user-friendly names
+const mapInternalCategoryToUser = (internalCategory: string): string => {
+  const reverseMap: Record<string, string> = {
+    'DEV': 'Development',
+    'DESIGN': 'Design',
+    'CONTENT': 'Content',
+    'GROWTH': 'Growth',
+    'COMMUNITY': 'Community',
+    'OTHER': 'Other',
+    'All': 'All'
+  };
+  
+  return reverseMap[internalCategory] || internalCategory;
+};
+
 // Simple in-memory state management for setup process
 const setupStates = new Map<number, {
   step: 'bountyRange' | 'categories' | 'projectType' | 'complete';
@@ -18,7 +48,7 @@ const AVAILABLE_CATEGORIES = [
   'All', 'Content', 'Design', 'Development', 'Other'
 ];
 
-const PROJECT_TYPES = ['bounties', 'projects'];
+const PROJECT_TYPES = ['bounty', 'project', 'all'];
 
 // Bounty range options
 const BOUNTY_RANGES = [
@@ -72,10 +102,18 @@ const createBountyRangeKeyboard = (): InlineKeyboardMarkup => {
 
 // Helper function to create project type selection keyboard
 const createProjectTypeKeyboard = (): InlineKeyboardMarkup => {
-  const keyboard = PROJECT_TYPES.map(type => [{
-    text: type.charAt(0).toUpperCase() + type.slice(1),
-    callback_data: `project_type_${type}`
-  }]);
+  const keyboard = [];
+  
+  // First row: All (exclusive option)
+  keyboard.push([
+    { text: 'All', callback_data: 'project_type_all' }
+  ]);
+  
+  // Second row: Bounty and Project
+  keyboard.push([
+    { text: 'Bounty', callback_data: 'project_type_bounty' },
+    { text: 'Project', callback_data: 'project_type_project' }
+  ]);
   
   // Add back button
   keyboard.push([{
@@ -248,28 +286,29 @@ export const handleCallbackQuery = async (ctx: any) => {
 };
 
 const handleCategorySelection = async (ctx: any, state: any, callbackData: string) => {
-  const category = callbackData.replace('category_', '');
+  const userCategory = callbackData.replace('category_', '');
+  const internalCategory = mapUserCategoryToInternal(userCategory);
   
   if (!state.data.categories) {
     state.data.categories = [];
   }
   
-  if (category === 'all') {
-    state.data.categories = AVAILABLE_CATEGORIES;
-  } else if (category === 'All') {
+  if (userCategory === 'all') {
+    state.data.categories = AVAILABLE_CATEGORIES.map(cat => mapUserCategoryToInternal(cat));
+  } else if (userCategory === 'All') {
     // "All" is exclusive - clear other selections
     state.data.categories = ['All'];
-  } else if (!state.data.categories.includes(category)) {
+  } else if (!state.data.categories.includes(internalCategory)) {
     // Remove "All" if selecting specific categories
     state.data.categories = state.data.categories.filter((cat: string) => cat !== 'All');
-    state.data.categories.push(category);
+    state.data.categories.push(internalCategory);
   }
   
   // Automatically proceed to next step after category selection
   state.step = 'projectType';
   
   await ctx.reply(
-    `✅ Categories set to: ${escapeMarkdownV2(state.data.categories.join(', '))}\n\n` +
+    `✅ Categories set to: ${escapeMarkdownV2(state.data.categories.map((cat: string) => mapInternalCategoryToUser(cat)).join(', '))}\n\n` +
     `*Step 3: Project Type*\n` +
     `What type of projects are you interested in?\n\n` +
     `Select from the buttons below:`,
@@ -279,13 +318,13 @@ const handleCategorySelection = async (ctx: any, state: any, callbackData: strin
     }
   );
   
-  await ctx.answerCbQuery(`Selected: ${category}`);
+  await ctx.answerCbQuery(`Selected: ${userCategory}`);
 };
 
 const handleProjectTypeSelection = async (ctx: any, state: any, callbackData: string) => {
   const projectType = callbackData.replace('project_type_', '');
   
-  if (projectType !== 'bounties' && projectType !== 'projects') {
+  if (!PROJECT_TYPES.includes(projectType)) {
     await ctx.answerCbQuery('Invalid project type selected.');
     return;
   }
@@ -322,10 +361,10 @@ const handleProjectTypeSelection = async (ctx: any, state: any, callbackData: st
 Your preferences have been saved:
 
 💰 *Bounty Range:* $${state.data.minBounty} \\- ${escapeMarkdownV2(maxText)}
-📂 *Categories:* ${escapeMarkdownV2(state.data.categories.join(', '))}
-🎯 *Project Type:* ${escapeMarkdownV2(projectType)}
+📂 *Categories:* ${escapeMarkdownV2(state.data.categories.map((cat: string) => mapInternalCategoryToUser(cat)).join(', '))}
+🎯 *Project Type:* ${escapeMarkdownV2(projectType === 'all' ? 'All' : projectType.charAt(0).toUpperCase() + projectType.slice(1))}
 
-You'll now receive notifications for new ${projectType} that match your preferences\\!
+You'll now receive notifications for new ${projectType === 'all' ? 'bounties and projects' : projectType + 's'} that match your preferences\\!
 
 Use these commands:
 • /preferences \\- View your settings

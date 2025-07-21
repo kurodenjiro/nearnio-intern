@@ -35,7 +35,7 @@ export interface UserPreferences {
   categories: string[];
   minBounty: number;
   maxBounty?: number;
-  projectType: string; // 'bounties' or 'projects'
+  projectType: string; // 'bounty', 'project', or 'all'
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;

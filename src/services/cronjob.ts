@@ -38,7 +38,7 @@ export class CronjobService {
     this.isRunning = true;
 
     // Get cron schedules from environment variables
-    const syncSchedule = process.env.SYNC_CRON_SCHEDULE || '*/1 * * * *'; // Every 15 minutes
+    const syncSchedule = process.env.SYNC_CRON_SCHEDULE || '*/60 * * * *'; // Every 15 minutes
     const notificationSchedule = process.env.NOTIFICATION_CRON_SCHEDULE || '*/1 * * * *'; // Every 5 minutes
     
     // Start sync cron job
@@ -145,13 +145,7 @@ export class CronjobService {
       // Process each user
       for (const user of activeUsers) {
         try {
-          debug(
-            user.projectType,
-            user.categories,
-            user.minBounty,
-            user.maxBounty,
-            lastCheckTime
-          )
+          
           // Get listings that match user preferences
           const matchingListings = await databaseService.getListingsByFilters(
             user.projectType,
@@ -160,17 +154,29 @@ export class CronjobService {
             user.maxBounty,
             lastCheckTime
           );
+          debug(user.projectType, user.categories, user.minBounty, user.maxBounty, lastCheckTime)
           debug(matchingListings)
 
           if (matchingListings.length > 0) {
             // Send notifications for matching listings
             for (const listing of matchingListings) {
-                             try {
-                 await this.bot!.telegram.sendMessage(
-                   user.chatId,
-                   notificationService.createListingMessage(listing),
-                   { parse_mode: 'MarkdownV2' }
-                 );
+              // Check if notification has already been sent to this user for this listing
+              const existingNotification = await databaseService.getNotificationLog(user.userId, listing.id);
+              if (existingNotification) {
+                debug(`Notification already sent to user ${user.userId} for listing ${listing.id}, skipping`);
+                continue;
+              }
+              
+              try {
+              const { text, keyboard } = notificationService.createListingMessage(listing);
+              await this.bot!.telegram.sendMessage(
+                user.chatId,
+                text,
+                { 
+                  parse_mode: 'MarkdownV2',
+                  reply_markup: keyboard
+                }
+              );
                  
                  // Log the notification
                  await databaseService.logNotification(

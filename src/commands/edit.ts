@@ -35,8 +35,19 @@ Currently, you can edit your preferences by using /stop to delete them and then 
 
 *Your current settings:*
 💰 *Bounty Range:* $${userPreferences.minBounty}${userPreferences.maxBounty ? ` \\- $${userPreferences.maxBounty}` : '+'}
-📂 *Categories:* ${escapeMarkdownV2(userPreferences.categories.length > 0 ? userPreferences.categories.join(', ') : 'All')}
-🎯 *Project Type:* ${escapeMarkdownV2(userPreferences.projectType || 'bounties')}
+📂 *Categories:* ${escapeMarkdownV2(userPreferences.categories.length > 0 ? userPreferences.categories.map((cat: string) => {
+      const categoryMap: Record<string, string> = {
+        'DEV': 'Development',
+        'DESIGN': 'Design',
+        'CONTENT': 'Content',
+        'GROWTH': 'Growth',
+        'COMMUNITY': 'Community',
+        'OTHER': 'Other',
+        'All': 'All'
+      };
+      return categoryMap[cat] || cat;
+    }).join(', ') : 'All')}
+🎯 *Project Type:* ${escapeMarkdownV2(userPreferences.projectType === 'all' ? 'All' : (userPreferences.projectType || 'bounty').charAt(0).toUpperCase() + (userPreferences.projectType || 'bounty').slice(1))}
 
 *To edit:*
 1\\. Use /stop to delete current preferences

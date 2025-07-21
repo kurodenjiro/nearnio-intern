@@ -50,7 +50,7 @@ model UserPreference {
   categories  String[] // Array of category strings
   minBounty   Float
   maxBounty   Float?
-  projectType String   @default("bounties") // 'bounties' or 'projects'
+  projectType String   @default("bounty") // 'bounty', 'project', or 'all'
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

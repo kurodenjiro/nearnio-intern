@@ -17,8 +17,9 @@ const debug = createDebug('bot:setup_command');
 
 // Available project types
 const PROJECT_TYPES = [
-  'bounties',
-  'projects'
+  'bounty',
+  'project',
+  'all'
 ];
 
 const setup = () => async (ctx: Context) => {

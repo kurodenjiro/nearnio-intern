@@ -39,8 +39,19 @@ You haven't set up your preferences yet. Use /setup to configure your bounty not
 ${status}
 
 💰 *Bounty Range:* $${userPreferences.minBounty}${userPreferences.maxBounty ? ` \\- $${userPreferences.maxBounty}` : '+'}
-📂 *Categories:* ${escapeMarkdownV2(userPreferences.categories.length > 0 ? userPreferences.categories.join(', ') : 'All')}
-🎯 *Project Type:* ${escapeMarkdownV2(userPreferences.projectType || 'bounties')}
+📂 *Categories:* ${escapeMarkdownV2(userPreferences.categories.length > 0 ? userPreferences.categories.map((cat: string) => {
+      const categoryMap: Record<string, string> = {
+        'DEV': 'Development',
+        'DESIGN': 'Design',
+        'CONTENT': 'Content',
+        'GROWTH': 'Growth',
+        'COMMUNITY': 'Community',
+        'OTHER': 'Other',
+        'All': 'All'
+      };
+      return categoryMap[cat] || cat;
+    }).join(', ') : 'All')}
+🎯 *Project Type:* ${escapeMarkdownV2(userPreferences.projectType === 'all' ? 'All' : (userPreferences.projectType || 'bounty').charAt(0).toUpperCase() + (userPreferences.projectType || 'bounty').slice(1))}
 
 📅 *Last Updated:* ${escapeMarkdownV2(lastUpdated)}
 ⏰ *Check Interval:* ${checkInterval} minutes

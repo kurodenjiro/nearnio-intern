@@ -1,5 +1,6 @@
 import createDebug from 'debug';
 import { SuperteamListing, UserPreferences } from '../types/superteam';
+import { TokenPriceService } from './token-price';
 
 const debug = createDebug('bot:database');
 
@@ -27,6 +28,7 @@ const skillCategoryMap: Record<string, string> = {
   'BUSINESS_DEVELOPMENT': 'GROWTH',
   'MARKETING': 'GROWTH',
   'GROWTH': 'GROWTH',
+  'DEVELOPMENT': 'DEV',
   
   // COMMUNITY category
   'COMMUNITY_MANAGER': 'COMMUNITY',
@@ -206,41 +208,87 @@ export class DatabaseService {
     sinceDate?: Date
   ): Promise<any[]> {
     try {
-      // Get all listings first
-      let allListings: any[] = [];
-      
       if (this.usePrisma && this.prisma) {
-        allListings = await this.prisma.listing.findMany({
+        // Build where clause for database filtering
+        const whereClause: any = {};
+        
+        // Only filter by project type if it's not "all"
+        if (projectType !== 'all') {
+          whereClause.type = projectType;
+        }
+
+        // Add date filter if specified
+        if (sinceDate) {
+          whereClause.syncedAt = {
+            gte: sinceDate,
+          };
+        }
+
+        // Handle category filtering
+        // If "All" is selected, don't filter by category
+        // If specific categories are selected, filter by mappedCategory
+        if (categories.length > 0 && !categories.includes('All')) {
+          whereClause.mappedCategory = {
+            in: categories,
+          };
+        }
+
+        // Get all listings that match the basic filters (type, category, date)
+        const listings = await this.prisma.listing.findMany({
+          where: whereClause,
           orderBy: {
             syncedAt: 'desc',
           },
         });
+
+        // Convert listings to USD and filter by bounty range
+        const tokenPriceService = TokenPriceService.getInstance();
+        const listingsWithUSD = await tokenPriceService.convertListingsToUSD(listings);
+        
+        const filteredListings = listingsWithUSD.filter((listing: any) => {
+          // Filter by bounty range using USD amount
+          if (listing.usdAmount < minBounty) return false;
+          if (maxBounty && listing.usdAmount > maxBounty) return false;
+          
+          return true;
+        });
+
+        return filteredListings;
       } else {
-        // In-memory storage
-        allListings = Array.from(inMemoryStorage.listings.values());
+        // In-memory storage fallback
+        const allListings = Array.from(inMemoryStorage.listings.values());
+
+        // Filter listings in memory
+        const filteredListings = allListings.filter((listing: any) => {
+          // Filter by project type (skip if "all")
+          if (projectType !== 'all' && listing.type !== projectType) return false;
+          
+          // Filter by categories (if specified and listing has mapped category)
+          // If "All" is selected, don't filter by category
+          if (categories.length > 0 && !categories.includes('All') && listing.mappedCategory) {
+            if (!categories.includes(listing.mappedCategory)) return false;
+          }
+          
+          // Filter by date if specified
+          if (sinceDate && listing.syncedAt < sinceDate) return false;
+          
+          return true;
+        });
+
+        // Convert to USD and filter by bounty range
+        const tokenPriceService = TokenPriceService.getInstance();
+        const listingsWithUSD = await tokenPriceService.convertListingsToUSD(filteredListings);
+        
+        return listingsWithUSD.filter((listing: any) => {
+          // Filter by bounty range using USD amount
+          if (listing.usdAmount < minBounty) return false;
+          if (maxBounty && listing.usdAmount > maxBounty) return false;
+          
+          return true;
+        });
+
+        return filteredListings;
       }
-
-      // Filter listings in memory
-      const filteredListings = allListings.filter((listing: any) => {
-        // Filter by project type
-        if (listing.type !== projectType) return false;
-        
-        // Filter by categories (if specified and listing has mapped category)
-        if (categories.length > 0 && listing.mappedCategory) {
-          if (!categories.includes(listing.mappedCategory)) return false;
-        }
-        
-        // Filter by date if specified
-        if (sinceDate && listing.syncedAt < sinceDate) return false;
-        
-        // Filter by bounty range
-        if (listing.rewardAmount < minBounty) return false;
-        if (maxBounty && listing.rewardAmount > maxBounty) return false;
-        
-        return true;
-      });
-
-      return filteredListings;
     } catch (error) {
       debug('Error getting listings by filters:', error);
       return [];
@@ -427,6 +475,30 @@ export class DatabaseService {
     } catch (error) {
       debug('Error logging notification:', error);
       // Don't throw error for logging failures
+    }
+  }
+
+  async getNotificationLog(userId: number, listingId: string): Promise<any | null> {
+    try {
+      if (this.usePrisma && this.prisma) {
+        const notification = await this.prisma.notificationLog.findFirst({
+          where: {
+            userId: BigInt(userId),
+            listingId,
+            success: true,
+          },
+        });
+        return notification;
+      } else {
+        // In-memory storage
+        const notification = inMemoryStorage.notificationLogs.find(
+          (log: any) => log.userId === userId && log.listingId === listingId && log.success
+        );
+        return notification || null;
+      }
+    } catch (error) {
+      debug('Error getting notification log:', error);
+      return null;
     }
   }
 

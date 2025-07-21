@@ -30,11 +30,28 @@ You haven't set up your preferences yet. Use /setup to configure your bounty not
     }
 
     const formatCategories = (categories: string[]) => {
-      return categories.length > 0 ? categories.join(', ') : 'All categories';
+      const categoryMap: Record<string, string> = {
+        'DEV': 'Development',
+        'DESIGN': 'Design',
+        'CONTENT': 'Content',
+        'GROWTH': 'Growth',
+        'COMMUNITY': 'Community',
+        'OTHER': 'Other',
+        'All': 'All'
+      };
+      
+      if (categories.length === 0) return 'All categories';
+      
+      return categories.map(cat => categoryMap[cat] || cat).join(', ');
     };
 
     const formatProjectType = (projectType: string) => {
-      return projectType || 'bounties';
+      const projectTypeMap: Record<string, string> = {
+        'bounty': 'Bounty',
+        'project': 'Project',
+        'all': 'All'
+      };
+      return projectTypeMap[projectType] || 'Bounty';
     };
 
     const formatBountyRange = (min: number, max?: number) => {

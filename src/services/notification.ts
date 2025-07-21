@@ -34,27 +34,47 @@ export class NotificationService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  public createListingMessage(listing: any): string {
-    const bountyAmount = `${listing.rewardAmount} ${listing.token}`;
-    const deadline = new Date(listing.deadline).toLocaleDateString();
-    const submissions = `${listing.submissionCount} submission${listing.submissionCount !== 1 ? 's' : ''}`;
+  public createListingMessage(listing: any): { text: string; keyboard?: any } {
+    // Ensure all required fields exist with fallbacks
+    const title = listing.title || 'Untitled Listing';
+    const rewardAmount = listing.rewardAmount || 0;
+    const token = listing.token || 'USD';
+    const deadline = listing.deadline ? new Date(listing.deadline).toLocaleDateString() : 'No deadline';
+    const submissionCount = listing.submissionCount || 0;
+    const sponsorName = listing.sponsorName || 'Unknown Sponsor';
+    const sponsorSlug = listing.sponsorSlug || '';
+    const listingSlug = listing.slug || '';
+    const sequentialId = listing.sequentialId || '';
+    const listingType = listing.type || 'Unknown';
+    const status = listing.status || 'Unknown';
+    
+    const bountyAmount = `${rewardAmount} ${token}`;
+    const submissions = `${submissionCount} submission${submissionCount !== 1 ? 's' : ''}`;
     const sponsorVerified = listing.sponsorIsVerified ? '✅' : '';
     const category = listing.mappedCategory ? `\n🏷️ *Category:* ${escapeMarkdownV2(listing.mappedCategory)}` : '';
 
     const message = `🎯 *New Bounty Alert\\!*
 
-*${escapeMarkdownV2(listing.title)}*
+*${escapeMarkdownV2(title)}*
 
 💰 *Reward:* ${escapeMarkdownV2(bountyAmount)}
-🏢 *Sponsor:* ${escapeMarkdownV2(listing.sponsorName)} ${sponsorVerified}
+🏢 *Sponsor:* ${escapeMarkdownV2(sponsorName)} ${sponsorVerified}
 📅 *Deadline:* ${escapeMarkdownV2(deadline)}
-📊 *Type:* ${escapeMarkdownV2(listing.type)}${category}
+📊 *Type:* ${escapeMarkdownV2(listingType)}${category}
 📝 *Submissions:* ${escapeMarkdownV2(submissions)}
-🏷️ *Status:* ${escapeMarkdownV2(listing.status)}
+🏷️ *Status:* ${escapeMarkdownV2(status)}`;
 
-🔗 [View Details](https://nearn\\.io/${escapeMarkdownV2(listing.sponsorSlug)}/${escapeMarkdownV2(listing.sequentialId || listing.slug)})`;
+    // Create inline keyboard for view details button
+    const keyboard = {
+      inline_keyboard: [[
+        {
+          text: '🔗 View Details',
+          url: `https://nearn.io/${sponsorSlug}/${sequentialId || listingSlug}`
+        }
+      ]]
+    };
 
-    return message;
+    return { text: message, keyboard };
   }
 
   private matchesUserPreferences(listing: any, preferences: UserPreferences): boolean {
@@ -88,8 +108,11 @@ export class NotificationService {
     preferences: UserPreferences
   ): Promise<void> {
     try {
-      const message = this.createListingMessage(listing);
-      await ctx.replyWithMarkdownV2(message, { parse_mode: 'MarkdownV2' });
+      const { text, keyboard } = this.createListingMessage(listing);
+      await ctx.replyWithMarkdownV2(text, { 
+        parse_mode: 'MarkdownV2',
+        reply_markup: keyboard
+      });
       debug(`Sent notification to user ${preferences.userId} for listing ${listing.id}`);
     } catch (error) {
       debug(`Failed to send notification to user ${preferences.userId}:`, error);
@@ -115,10 +138,14 @@ export class NotificationService {
         
         for (const listing of matchingListings) {
           try {
+            const { text, keyboard } = this.createListingMessage(listing);
             await bot.telegram.sendMessage(
               preferences.chatId,
-              this.createListingMessage(listing),
-              { parse_mode: 'MarkdownV2' }
+              text,
+              { 
+                parse_mode: 'MarkdownV2',
+                reply_markup: keyboard
+              }
             );
             // Add a small delay to avoid rate limiting
             await this.delay(100);
