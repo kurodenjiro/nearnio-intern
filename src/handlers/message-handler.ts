@@ -491,7 +491,7 @@ You'll be notified as the deadline approaches\\.`;
           [
             {
               text: '🔗 View Details',
-              url: `${process.env.SERVER_URL || 'https://nearn.io'}/${listing.slug}`
+              url: `${process.env.SERVER_URL || 'https://nearn.io'}/${listing.sponsorSlug}/${listing.sequentialId}`
             }
           ],
           [
@@ -541,7 +541,7 @@ You'll be notified as the deadline approaches\\.`;
           [
             {
               text: '🔗 View Details',
-              url: `${process.env.SERVER_URL || 'https://nearn.io'}/${listing.slug}`
+              url: `${process.env.SERVER_URL || 'https://nearn.io'}/${listing.sponsorSlug}/${listing.sequentialId}`
             }
           ],
           [

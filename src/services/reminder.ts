@@ -12,8 +12,8 @@ export interface ReminderNotification {
   deadline: Date;
   timeLeft: string;
   isFinal: boolean;
-  sponsorSlug?: string;
-  sequentialId?: number;
+  sponsorSlug: string;
+  sequentialId: number;
 }
 
 export class ReminderService {
@@ -145,17 +145,22 @@ export class ReminderService {
             select: { sponsorSlug: true, sequentialId: true }
           });
 
-          dueReminders.push({
-            userId: Number(reminder.userId),
-            listingId: reminder.listingId,
-            listingSlug: reminder.listingSlug,
-            title: reminder.title,
-            deadline: reminder.deadline,
-            timeLeft: timeLeft,
-            isFinal: this.isFinalReminder(reminder.deadline),
-            sponsorSlug: listing?.sponsorSlug,
-            sequentialId: listing?.sequentialId
-          });
+          // Only include reminders that have valid listing data
+          if (listing?.sponsorSlug && listing?.sequentialId) {
+            dueReminders.push({
+              userId: Number(reminder.userId),
+              listingId: reminder.listingId,
+              listingSlug: reminder.listingSlug,
+              title: reminder.title,
+              deadline: reminder.deadline,
+              timeLeft: timeLeft,
+              isFinal: this.isFinalReminder(reminder.deadline),
+              sponsorSlug: listing.sponsorSlug,
+              sequentialId: listing.sequentialId
+            });
+          } else {
+            debug(`Skipping reminder ${reminder.listingId} - missing sponsorSlug or sequentialId`);
+          }
         }
       }
 
@@ -212,9 +217,12 @@ export class ReminderService {
   async sendReminderNotification(bot: any, reminder: ReminderNotification): Promise<void> {
     try {
       // Use the correct URL format with sponsorSlug and sequentialId
-      const listingUrl = reminder.sponsorSlug && reminder.sequentialId 
-        ? `${process.env.SERVER_URL || 'https://nearn.io'}/${reminder.sponsorSlug}/${reminder.sequentialId}`
-        : `${process.env.SERVER_URL || 'https://nearn.io'}/${reminder.listingSlug}`;
+      if (!reminder.sponsorSlug || !reminder.sequentialId) {
+        debug(`Missing sponsorSlug or sequentialId for reminder ${reminder.listingId}, skipping`);
+        return;
+      }
+      
+      const listingUrl = `${process.env.SERVER_URL || 'https://nearn.io'}/${reminder.sponsorSlug}/${reminder.sequentialId}`;
 
       const message = `⏰ *Deadline Reminder\\!*
 

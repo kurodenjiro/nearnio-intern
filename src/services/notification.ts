@@ -100,14 +100,19 @@ export class NotificationService {
     }
 
     // Create inline keyboard for view details and reminder buttons
+    // Only create URL if we have both sponsorSlug and sequentialId
+    const listingUrl = sponsorSlug && sequentialId 
+      ? `${process.env.SERVER_URL || 'https://nearn.io'}/${sponsorSlug}/${sequentialId}`
+      : null;
+
     const keyboard = {
       inline_keyboard: [
-        [
+        ...(listingUrl ? [[
           {
             text: '🔗 View Details',
-            url: `${process.env.SERVER_URL || 'https://nearn.io'}/${sponsorSlug}/${sequentialId || listingSlug}`
+            url: listingUrl
           }
-        ],
+        ]] : []),
         [
           {
             text: reminderButtonText,
