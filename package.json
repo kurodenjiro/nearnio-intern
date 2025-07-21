@@ -39,6 +39,7 @@
     "test-reminder-button": "ts-node scripts/test-reminder-button.ts",
     "test-reminder-messages": "ts-node scripts/test-reminder-messages.ts",
     "test-markdown": "ts-node scripts/test-markdown-escaping.ts",
-    "test-vercel-cron": "ts-node scripts/test-vercel-cron.ts"
+    "test-vercel-cron": "ts-node scripts/test-vercel-cron.ts",
+    "deploy-checklist": "ts-node scripts/deploy-checklist.ts"
   }
 }
