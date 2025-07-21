@@ -1,6 +1,7 @@
 import { Context } from 'telegraf';
 import createDebug from 'debug';
 import { DatabaseService } from './database';
+import { escapeMarkdownV2 } from '../utils/markdown';
 
 const debug = createDebug('bot:reminder');
 
@@ -226,9 +227,9 @@ export class ReminderService {
 
       const message = `⏰ *Deadline Reminder\\!*
 
-*${reminder.title}*
+*${escapeMarkdownV2(reminder.title)}*
 
-${reminder.timeLeft}
+${escapeMarkdownV2(reminder.timeLeft)}
 
 🔗 [View Details](${listingUrl})`;
 

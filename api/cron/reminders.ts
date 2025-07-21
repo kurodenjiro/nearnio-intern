@@ -1,6 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { ReminderService } from '../../src/services/reminder';
 import { DatabaseService } from '../../src/services/database';
+import { escapeMarkdownV2 } from '../../src/utils/markdown';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Verify this is a Vercel cron job request
@@ -54,15 +55,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         
         // Create reminder message
         let message = `⏰ *Deadline Reminder*\n\n`;
-        message += `*${listing.title}*\n\n`;
-        message += `📅 *Deadline:* ${reminder.deadline}\n`;
-        message += `⏱️ *Time Left:* ${timeLeft}\n\n`;
-        
+        message += `*${escapeMarkdownV2(listing.title)}*\n\n`;
+        message += `📅 *Deadline:* ${escapeMarkdownV2(reminder.deadline.toString())}\n`;
+        message += `⏱️ *Time Left:* ${escapeMarkdownV2(timeLeft)}\n\n`;
+          
         if (isFinalReminder) {
-          message += `🚨 *This is your final reminder!*\n`;
-          message += `The submission deadline is very close.`;
+          message += `🚨 *This is your final reminder\\!*\n`;
+          message += `The submission deadline is very close\\.`;
         } else {
-          message += `You'll receive more reminders as the deadline approaches.`;
+          message += `You'll receive more reminders as the deadline approaches\\.`;
         }
 
         // Create inline keyboard
