@@ -101,6 +101,7 @@ export class TokenPriceService {
       'USDC': 1,
       'USDT': 1,
       'USD': 1,
+      'ANY': 1, // 'Any' token is already in USD
       'NEAR': 2.85, // Updated based on current market price
       'SOL': 100,
       'ETH': 3000,
@@ -119,13 +120,19 @@ export class TokenPriceService {
   }
 
   async convertToUSD(amount: number, token: string): Promise<number> {
+    // If token is 'Any', the amount is already in USD
+    if (token === 'Any') {
+      return amount;
+    }
+    
     const price = await this.getTokenPrice(token);
     return amount * price;
   }
 
   // Batch convert multiple listings
   async convertListingsToUSD(listings: any[]): Promise<any[]> {
-    const uniqueTokens = [...new Set(listings.map(l => l.token))];
+    // Filter out 'Any' token since it's already in USD
+    const uniqueTokens = [...new Set(listings.map(l => l.token).filter(token => token !== 'Any'))];
     const pricePromises = uniqueTokens.map(token => this.getTokenPrice(token));
     const prices = await Promise.all(pricePromises);
     
@@ -135,7 +142,7 @@ export class TokenPriceService {
 
     return listings.map(listing => ({
       ...listing,
-      usdAmount: listing.rewardAmount * tokenPrices[listing.token]
+      usdAmount: listing.token === 'Any' ? listing.rewardAmount : listing.rewardAmount * tokenPrices[listing.token]
     }));
   }
 } 

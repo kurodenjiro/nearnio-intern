@@ -78,27 +78,34 @@ export class NotificationService {
   }
 
   private matchesUserPreferences(listing: any, preferences: UserPreferences): boolean {
-    // Check bounty amount
-    const bountyAmount = listing.rewardAmount;
+    // Check bounty amount (use USD amount if available, otherwise use original)
+    const bountyAmount = listing.usdAmount || listing.rewardAmount;
+    debug(`Checking bounty: ${bountyAmount} vs min: ${preferences.minBounty}, max: ${preferences.maxBounty}`);
+    
     if (bountyAmount < preferences.minBounty) {
+      debug(`Bounty ${bountyAmount} below minimum ${preferences.minBounty}`);
       return false;
     }
     if (preferences.maxBounty && bountyAmount > preferences.maxBounty) {
+      debug(`Bounty ${bountyAmount} above maximum ${preferences.maxBounty}`);
       return false;
     }
 
     // Check project type
     if (listing.type !== preferences.projectType) {
+      debug(`Project type mismatch: ${listing.type} vs ${preferences.projectType}`);
       return false;
     }
 
     // Check categories if specified and listing has mapped category
     if (preferences.categories.length > 0 && listing.mappedCategory) {
       if (!preferences.categories.includes(listing.mappedCategory)) {
+        debug(`Category mismatch: ${listing.mappedCategory} not in ${preferences.categories}`);
         return false;
       }
     }
     
+    debug(`Listing matches preferences for user ${preferences.userId}`);
     return true;
   }
 
@@ -128,6 +135,8 @@ export class NotificationService {
 
     for (const preferences of allPreferences) {
       if (!preferences.isActive) continue;
+
+      debug(`User ${preferences.userId} preferences: minBounty=${preferences.minBounty}, maxBounty=${preferences.maxBounty}, projectType=${preferences.projectType}, categories=${preferences.categories}`);
 
       const matchingListings = listings.filter(listing => 
         this.matchesUserPreferences(listing, preferences)
