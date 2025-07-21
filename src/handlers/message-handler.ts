@@ -1,8 +1,9 @@
 import { Context } from 'telegraf';
 import createDebug from 'debug';
-import { StorageService } from '../services/storage';
+import { DatabaseService } from '../services/database';
 import { UserPreferences } from '../types/superteam';
 import { escapeMarkdownV2 } from '../utils/markdown';
+import { ReminderService } from '../services/reminder';
 import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 
 const debug = createDebug('bot:message-handler');
@@ -167,7 +168,7 @@ export const handleMessage = async (ctx: Context) => {
     return;
   }
 
-  const storage = StorageService.getInstance();
+  const storage = DatabaseService.getInstance();
   const setupState = setupStates.get(userId);
 
   if (setupState) {
@@ -305,14 +306,24 @@ export const handleCallbackQuery = async (ctx: any) => {
     return;
   }
 
-  const setupState = setupStates.get(userId);
-  
-  if (!setupState) {
-    await ctx.answerCbQuery('No active setup session. Use /setup to start.');
-    return;
-  }
-
   try {
+    // Handle reminder callbacks (work outside of setup)
+    if (callbackData.startsWith('add_reminder_')) {
+      await handleAddReminder(ctx, callbackData);
+      return;
+    } else if (callbackData.startsWith('stop_reminder_')) {
+      await handleStopReminder(ctx, callbackData);
+      return;
+    }
+
+    // Handle setup callbacks (require active setup session)
+    const setupState = setupStates.get(userId);
+    
+    if (!setupState) {
+      await ctx.answerCbQuery('No active setup session. Use /setup to start.');
+      return;
+    }
+
     if (callbackData.startsWith('bounty_range_')) {
       await handleBountyRangeSelection(ctx, setupState, callbackData);
     } else if (callbackData.startsWith('category_')) {
@@ -383,7 +394,7 @@ const handleProjectTypeSelection = async (ctx: any, state: any, callbackData: st
     return;
   }
   
-  const storage = StorageService.getInstance();
+  const storage = DatabaseService.getInstance();
   
   state.data.userId = userId;
   state.data.chatId = chatId;
@@ -419,6 +430,179 @@ Use these commands:
   });
   
   await ctx.answerCbQuery('Setup completed successfully!');
+};
+
+// Reminder callback handlers
+const handleAddReminder = async (ctx: any, callbackData: string) => {
+  const userId = ctx.from?.id;
+  const listingId = parseInt(callbackData.replace('add_reminder_', ''));
+  
+  debug(`Add reminder request: userId=${userId}, listingId=${listingId}, callbackData=${callbackData}`);
+  
+  if (!userId || isNaN(listingId)) {
+    debug(`Invalid reminder request: userId=${userId}, listingId=${listingId}`);
+    await ctx.answerCbQuery('Invalid reminder request.');
+    return;
+  }
+
+  try {
+    const reminderService = ReminderService.getInstance();
+    const storageService = DatabaseService.getInstance();
+    
+    debug(`Looking up listing with ID: ${listingId}`);
+    
+    // Get listing details from database
+    const listing = await storageService.getListingById(listingId);
+    
+    if (!listing) {
+      debug(`Listing not found for ID: ${listingId}`);
+      await ctx.answerCbQuery('Listing not found.');
+      return;
+    }
+    
+    debug(`Found listing: ${listing.title}`);
+
+    // Check if user already has an active reminder
+    const hasReminder = await reminderService.hasActiveReminder(userId, listingId);
+    
+    if (hasReminder) {
+      // Send message showing existing reminder with option to stop
+      const formattedDeadline = escapeMarkdownV2(new Date(listing.deadline).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      }));
+
+      const existingReminderMessage = `⏰ *Reminder Already Set*
+
+*${escapeMarkdownV2(listing.title)}*
+
+You already have an active reminder for this listing\\.
+
+📅 *Deadline:* ${formattedDeadline}
+
+You'll be notified as the deadline approaches\\.`;
+
+      const keyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: '🔗 View Details',
+              url: `${process.env.SERVER_URL || 'https://nearn.io'}/${listing.slug}`
+            }
+          ],
+          [
+            {
+              text: '🛑 Stop Reminders',
+              callback_data: `stop_reminder_${listingId}`
+            }
+          ]
+        ]
+      };
+
+      await ctx.reply(existingReminderMessage, {
+        parse_mode: 'MarkdownV2',
+        reply_markup: keyboard
+      });
+      
+      await ctx.answerCbQuery('⏰ Reminder already active for this listing.');
+      return;
+    }
+
+    // Add reminder
+    const success = await reminderService.addReminder(
+      userId,
+      listingId,
+      listing.slug,
+      listing.title,
+      new Date(listing.deadline)
+    );
+
+    if (success) {
+      // Send confirmation message with stop reminder button
+      const formattedDeadline = escapeMarkdownV2(new Date(listing.deadline).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      }));
+
+      const confirmationMessage = `✅ *Reminder Set "${escapeMarkdownV2(listing.title)}" Successfully\\!*
+
+📅 *Deadline:* ${formattedDeadline}`;
+
+      const keyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: '🔗 View Details',
+              url: `${process.env.SERVER_URL || 'https://nearn.io'}/${listing.slug}`
+            }
+          ],
+          [
+            {
+              text: '🛑 Stop Reminders',
+              callback_data: `stop_reminder_${listingId}`
+            }
+          ]
+        ]
+      };
+
+      await ctx.reply(confirmationMessage, {
+        parse_mode: 'MarkdownV2',
+        reply_markup: keyboard
+      });
+      
+      await ctx.answerCbQuery('✅ Reminder set successfully!');
+    } else {
+      await ctx.answerCbQuery('❌ Failed to set reminder. Please try again.');
+    }
+  } catch (error) {
+    debug('Error adding reminder:', error);
+    await ctx.answerCbQuery('An error occurred while setting the reminder.');
+  }
+};
+
+const handleStopReminder = async (ctx: any, callbackData: string) => {
+  const userId = ctx.from?.id;
+  const listingId = parseInt(callbackData.replace('stop_reminder_', ''));
+  
+  if (!userId || isNaN(listingId)) {
+    await ctx.answerCbQuery('Invalid stop reminder request.');
+    return;
+  }
+
+  try {
+    const reminderService = ReminderService.getInstance();
+    
+    // Remove reminder
+    const success = await reminderService.removeReminder(userId, listingId);
+
+    if (success) {
+      // Send confirmation message
+      const confirmationMessage = `🛑 *Reminders Stopped*
+
+✅ You will no longer receive deadline reminders for this listing\\.
+
+To set a new reminder, click the "⏰ Remind Deadline" button on any listing notification\\.`;
+
+      await ctx.reply(confirmationMessage, {
+        parse_mode: 'MarkdownV2'
+      });
+      
+      await ctx.answerCbQuery('✅ Reminders stopped successfully!');
+    } else {
+      await ctx.answerCbQuery('❌ Failed to stop reminders. Please try again.');
+    }
+  } catch (error) {
+    debug('Error stopping reminder:', error);
+    await ctx.answerCbQuery('An error occurred while stopping the reminder.');
+  }
 };
 
  

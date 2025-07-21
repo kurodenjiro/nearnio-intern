@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,34 +8,34 @@ datasource db {
 }
 
 model Listing {
-  id                  Int      @id
-  sequentialId        Int?
-  title               String
-  rewardAmount        Float
-  token               String
-  deadline            DateTime
-  type                String
-  status              String
-  slug                String   @unique
-  isWinnersAnnounced  Boolean  @default(false)
-  isFeatured          Boolean  @default(false)
-  compensationType    String
-  minRewardAsk        Float?
-  maxRewardAsk        Float?
-  winnersAnnouncedAt  DateTime?
-  commentsCount       Int      @default(0)
-  submissionCount     Int      @default(0)
-  description         String?  // Optional description from detail page
-  skills              Json?    // Array of skill objects from detail page
-  mappedCategory      String?  // Category mapped from skills
-  sponsorName         String
-  sponsorSlug         String
-  sponsorLogo         String
-  sponsorIsVerified   Boolean  @default(false)
-  sponsorSt           Boolean  @default(false)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  syncedAt            DateTime @default(now())
+  id                 Int       @id
+  sequentialId       Int?
+  title              String
+  rewardAmount       Float
+  token              String
+  deadline           DateTime
+  type               String
+  status             String
+  slug               String    @unique
+  isWinnersAnnounced Boolean   @default(false)
+  isFeatured         Boolean   @default(false)
+  compensationType   String
+  minRewardAsk       Float?
+  maxRewardAsk       Float?
+  winnersAnnouncedAt DateTime?
+  commentsCount      Int       @default(0)
+  submissionCount    Int       @default(0)
+  description        String?
+  skills             Json?     @db.Json
+  mappedCategory     String?
+  sponsorName        String
+  sponsorSlug        String
+  sponsorLogo        String
+  sponsorIsVerified  Boolean   @default(false)
+  sponsorSt          Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  syncedAt           DateTime  @default(now())
 
   @@map("listings")
 }
@@ -47,10 +44,10 @@ model UserPreference {
   id          Int      @id @default(autoincrement())
   userId      BigInt   @unique
   chatId      BigInt
-  categories  String[] // Array of category strings
+  categories  String[]
   minBounty   Float
   maxBounty   Float?
-  projectType String   @default("bounty") // 'bounty', 'project', or 'all'
+  projectType String   @default("bounty")
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -76,4 +73,19 @@ model SystemConfig {
   updatedAt DateTime @updatedAt
 
   @@map("system_config")
-} 
+}
+
+model UserReminder {
+  id          Int      @id @default(autoincrement())
+  userId      BigInt
+  listingId   Int
+  listingSlug String
+  title       String
+  deadline    DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, listingId])
+  @@map("user_reminders")
+}

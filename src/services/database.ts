@@ -87,6 +87,15 @@ export class DatabaseService {
     return DatabaseService.instance;
   }
 
+  // Public methods to access Prisma client
+  public getPrismaClient(): any {
+    return this.prisma;
+  }
+
+  public isUsingPrisma(): boolean {
+    return this.usePrisma;
+  }
+
   // Listing operations
   async syncListings(listings: SuperteamListing[]): Promise<number> {
     try {
@@ -203,6 +212,31 @@ export class DatabaseService {
     } catch (error) {
       debug('Error getting new listings:', error);
       return [];
+    }
+  }
+
+  async getListingById(listingId: number): Promise<any | null> {
+    try {
+      debug(`Getting listing by ID: ${listingId}`);
+      
+      if (this.usePrisma && this.prisma) {
+        const listing = await this.prisma.listing.findUnique({
+          where: {
+            id: listingId
+          }
+        });
+        
+        debug(`Found listing: ${listing ? listing.title : 'not found'}`);
+        return listing;
+      } else {
+        // In-memory storage
+        const listing = inMemoryStorage.listings.get(listingId.toString());
+        debug(`Found listing in memory: ${listing ? listing.title : 'not found'}`);
+        return listing || null;
+      }
+    } catch (error) {
+      debug('Error getting listing by ID:', error);
+      return null;
     }
   }
 

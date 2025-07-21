@@ -2,6 +2,7 @@ import { Context } from 'telegraf';
 import createDebug from 'debug';
 import { SuperteamListing, UserPreferences } from '../types/superteam';
 import { escapeMarkdownV2 } from '../utils/markdown';
+import { ReminderService } from './reminder';
 
 const debug = createDebug('bot:notification');
 
@@ -34,7 +35,7 @@ export class NotificationService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  public createListingMessage(listing: any): { text: string; keyboard?: any } {
+  public async createListingMessage(listing: any, userId?: number): Promise<{ text: string; keyboard?: any }> {
     // Ensure all required fields exist with fallbacks
     const title = listing.title || 'Untitled Listing';
     const rewardAmount = listing.rewardAmount || 0;
@@ -84,14 +85,36 @@ export class NotificationService {
 📝 *Submissions:* ${escapeMarkdownV2(submissions)}
 🏷️ *Status:* ${escapeMarkdownV2(status)}${skillsText}`;
 
-    // Create inline keyboard for view details button
+    // Check if user has an active reminder for this listing
+    let reminderButtonText = '⏰ Remind Deadline';
+    let reminderCallbackData = `add_reminder_${listing.id || listing.sequentialId}`;
+    
+    if (userId) {
+      const reminderService = ReminderService.getInstance();
+      const hasReminder = await reminderService.hasActiveReminder(userId, listing.id || listing.sequentialId);
+      
+      if (hasReminder) {
+        reminderButtonText = '✅ Reminder Set';
+        reminderCallbackData = `stop_reminder_${listing.id || listing.sequentialId}`;
+      }
+    }
+
+    // Create inline keyboard for view details and reminder buttons
     const keyboard = {
-      inline_keyboard: [[
-        {
-          text: '🔗 View Details',
-          url: `${process.env.SERVER_URL || 'https://nearn.io'}/${sponsorSlug}/${sequentialId || listingSlug}`
-        }
-      ]]
+      inline_keyboard: [
+        [
+          {
+            text: '🔗 View Details',
+            url: `${process.env.SERVER_URL || 'https://nearn.io'}/${sponsorSlug}/${sequentialId || listingSlug}`
+          }
+        ],
+        [
+          {
+            text: reminderButtonText,
+            callback_data: reminderCallbackData
+          }
+        ]
+      ]
     };
 
     return { text: message, keyboard };
@@ -135,7 +158,7 @@ export class NotificationService {
     preferences: UserPreferences
   ): Promise<void> {
     try {
-      const { text, keyboard } = this.createListingMessage(listing);
+      const { text, keyboard } = await this.createListingMessage(listing, preferences.userId);
       await ctx.replyWithMarkdownV2(text, { 
         parse_mode: 'MarkdownV2',
         reply_markup: keyboard
@@ -167,7 +190,7 @@ export class NotificationService {
         
         for (const listing of matchingListings) {
           try {
-            const { text, keyboard } = this.createListingMessage(listing);
+            const { text, keyboard } = await this.createListingMessage(listing, preferences.userId);
             await bot.telegram.sendMessage(
               preferences.chatId,
               text,

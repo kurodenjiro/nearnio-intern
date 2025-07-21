@@ -5,6 +5,7 @@ import { SuperteamApiService } from './superteam-api';
 import { DatabaseService } from './database';
 import { NotificationService } from './notification';
 import { UserPreferences } from '../types/superteam';
+import { ReminderService } from './reminder';
 
 const debug = createDebug('bot:cronjob');
 
@@ -13,6 +14,7 @@ export class CronjobService {
   private bot: Telegraf | null = null;
   private syncCronJob: cron.ScheduledTask | null = null;
   private notificationCronJob: cron.ScheduledTask | null = null;
+  private reminderCronJob: cron.ScheduledTask | null = null;
   private isRunning = false;
 
   private constructor() {}
@@ -40,6 +42,7 @@ export class CronjobService {
     // Get cron schedules from environment variables
     const syncSchedule = process.env.SYNC_CRON_SCHEDULE || '*/1 * * * *'; // Every 15 minutes
     const notificationSchedule = process.env.NOTIFICATION_CRON_SCHEDULE || '*/1 * * * *'; // Every 5 minutes
+    const reminderSchedule = process.env.REMINDER_CRON_SCHEDULE || '*/5 * * * *'; // Every 5 minutes
     
     // Start sync cron job
     this.syncCronJob = cron.schedule(syncSchedule, async () => {
@@ -51,7 +54,12 @@ export class CronjobService {
       await this.sendNotificationsFromDatabase();
     });
 
-    debug(`Cronjob service started - Sync: ${syncSchedule}, Notifications: ${notificationSchedule}`);
+    // Start reminder cron job
+    this.reminderCronJob = cron.schedule(reminderSchedule, async () => {
+      await this.sendReminderNotifications();
+    });
+
+    debug(`Cronjob service started - Sync: ${syncSchedule}, Notifications: ${notificationSchedule}, Reminders: ${reminderSchedule}`);
   }
 
   public stop(): void {
@@ -63,6 +71,11 @@ export class CronjobService {
     if (this.notificationCronJob) {
       this.notificationCronJob.stop();
       this.notificationCronJob = null;
+    }
+
+    if (this.reminderCronJob) {
+      this.reminderCronJob.stop();
+      this.reminderCronJob = null;
     }
     
     this.isRunning = false;
@@ -168,7 +181,7 @@ export class CronjobService {
               }
               
               try {
-              const { text, keyboard } = notificationService.createListingMessage(listing);
+              const { text, keyboard } = await notificationService.createListingMessage(listing, user.userId);
               await this.bot!.telegram.sendMessage(
                 user.chatId,
                 text,
@@ -217,6 +230,55 @@ export class CronjobService {
     }
   }
 
+  // Send reminder notifications
+  private async sendReminderNotifications(): Promise<void> {
+    try {
+      if (!this.bot) {
+        debug('Bot not initialized, skipping reminder notifications');
+        return;
+      }
+
+      debug('Starting reminder notification check...');
+      
+      const reminderService = ReminderService.getInstance();
+      const databaseService = DatabaseService.getInstance();
+      
+      // Get all due reminders
+      const dueReminders = await reminderService.getDueReminders();
+      
+      if (dueReminders.length === 0) {
+        debug('No due reminders found');
+        return;
+      }
+
+      debug(`Found ${dueReminders.length} due reminders`);
+
+      let sentCount = 0;
+      
+      for (const reminder of dueReminders) {
+        try {
+          // Send reminder notification
+          await reminderService.sendReminderNotification(this.bot, reminder);
+          sentCount++;
+          
+          // Add a small delay between notifications
+          await this.delay(100);
+          
+        } catch (error) {
+          debug(`Error sending reminder notification for user ${reminder.userId}, listing ${reminder.listingId}:`, error);
+        }
+      }
+      
+      // Update last reminder check time
+      await databaseService.setSystemConfig('last_reminder_check', new Date().toISOString());
+      
+      debug(`Reminder check completed. Sent ${sentCount} reminder notifications`);
+      
+    } catch (error) {
+      debug('Error during reminder check:', error);
+    }
+  }
+
   // Manual sync method
   public async manualSync(): Promise<void> {
     debug('Manual sync triggered');
@@ -227,6 +289,12 @@ export class CronjobService {
   public async manualNotificationCheck(): Promise<void> {
     debug('Manual notification check triggered');
     await this.sendNotificationsFromDatabase();
+  }
+
+  // Manual reminder check method
+  public async manualReminderCheck(): Promise<void> {
+    debug('Manual reminder check triggered');
+    await this.sendReminderNotifications();
   }
 
   public isActive(): boolean {

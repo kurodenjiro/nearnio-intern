@@ -33,6 +33,13 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "mock-api": "ts-node scripts/start-mock-api.ts",
+    "mock-api:dev": "nodemon -e ts -x ts-node scripts/start-mock-api.ts",
+    "test-mock": "ts-node scripts/test-mock-api.ts",
+    "test-reminders": "ts-node scripts/test-reminders.ts",
+    "test-reminder-button": "ts-node scripts/test-reminder-button.ts",
+    "test-reminder-messages": "ts-node scripts/test-reminder-messages.ts",
+    "test-markdown": "ts-node scripts/test-markdown-escaping.ts"
   }
 }
