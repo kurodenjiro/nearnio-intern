@@ -2,6 +2,7 @@ import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 interface MockListing {
+  id: number;
   rewardAmount: number;
   deadline: string;
   type: 'bounty' | 'project';
@@ -33,6 +34,7 @@ class MockApiService {
   private mockData: MockListing[] = [];
   private envFilePath: string;
   private updateInterval: NodeJS.Timeout | null = null;
+  private nextId: number = 1;
 
   constructor() {
     this.envFilePath = join(process.cwd(), '.env');
@@ -40,14 +42,19 @@ class MockApiService {
     this.startAutoUpdate();
   }
 
+  private generateUniqueId(): number {
+    return this.nextId++;
+  }
+
   private initializeMockData() {
     this.mockData = [
       {
+        id: this.generateUniqueId(), // Independent unique ID (1)
         rewardAmount: 3000,
         deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         type: 'bounty',
         title: 'Automate Generation of TypeScript RPC Client for NEAR Protocol',
-        sequentialId: 13,
+        sequentialId: 13, // Separate from ID
         token: 'NEAR',
         isPublished: true,
         isPrivate: false,
@@ -70,11 +77,12 @@ class MockApiService {
         }
       },
       {
+        id: this.generateUniqueId(), // Independent unique ID (2)
         rewardAmount: 250,
         deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         type: 'bounty',
         title: 'Create a DAO Reviewer Shade Agent Tutorial',
-        sequentialId: 1,
+        sequentialId: 1, // Separate from ID
         token: 'USDC',
         isPublished: true,
         isPrivate: false,
@@ -97,11 +105,12 @@ class MockApiService {
         }
       },
       {
+        id: this.generateUniqueId(), // Independent unique ID (3)
         rewardAmount: 102,
         deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
         type: 'bounty',
         title: 'StakeWars with Qbit',
-        sequentialId: 1,
+        sequentialId: 1, // Separate from ID
         token: 'NEAR',
         isPublished: true,
         isPrivate: false,
@@ -124,11 +133,12 @@ class MockApiService {
         }
       },
       {
+        id: this.generateUniqueId(), // Independent unique ID (4)
         rewardAmount: 120,
         deadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
         type: 'bounty',
         title: 'Make a Background Illustration for Intear Wallet',
-        sequentialId: 1,
+        sequentialId: 1, // Separate from ID
         token: 'USDC',
         isPublished: true,
         isPrivate: false,
@@ -151,11 +161,12 @@ class MockApiService {
         }
       },
       {
+        id: this.generateUniqueId(), // Independent unique ID (5)
         rewardAmount: 250,
         deadline: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
         type: 'bounty',
         title: 'Implement Sign NEP-413 off-chain messages in near-cli-rs',
-        sequentialId: 20,
+        sequentialId: 20, // Separate from ID
         token: 'USDC',
         isPublished: true,
         isPrivate: false,
@@ -213,11 +224,12 @@ class MockApiService {
     const randomSequentialId = Math.floor(Math.random() * 100) + 1;
 
     return {
+      id: this.generateUniqueId(), // Independent unique ID
       rewardAmount: randomReward,
       deadline: randomDeadline.toISOString(),
       type: randomType,
       title: randomTitle,
-      sequentialId: randomSequentialId,
+      sequentialId: randomSequentialId, // Separate from ID
       token: randomToken,
       isPublished: true,
       isPrivate: false,

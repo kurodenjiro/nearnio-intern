@@ -11,7 +11,7 @@ datasource db {
 }
 
 model Listing {
-  id                  String   @id
+  id                  Int      @id
   sequentialId        Int?
   title               String
   rewardAmount        Float
@@ -61,7 +61,7 @@ model UserPreference {
 model NotificationLog {
   id        Int      @id @default(autoincrement())
   userId    BigInt
-  listingId String
+  listingId Int
   sentAt    DateTime @default(now())
   success   Boolean  @default(true)
   error     String?

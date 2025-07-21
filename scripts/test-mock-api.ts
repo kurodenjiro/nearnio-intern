@@ -34,7 +34,7 @@ async function testMockApi() {
     console.log(`✅ Found ${listingsData.length} listings`);
     console.log('📋 Sample listings:');
     listingsData.slice(0, 3).forEach((listing: any, index: number) => {
-      console.log(`   ${index + 1}. ${listing.title}`);
+      console.log(`   ${index + 1}. [ID: ${listing.id}] ${listing.title}`);
       console.log(`      💰 ${listing.rewardAmount} ${listing.token}`);
       console.log(`      🏷️ ${listing.type} | ${listing.sponsor.name}`);
       console.log(`      💬 Comments: ${listing._count.Comments}`);
@@ -47,7 +47,7 @@ async function testMockApi() {
       console.log('4️⃣ Testing specific listing endpoint...');
       const detailResponse = await fetch(`${MOCK_API_BASE}/mock-api/listings/${firstListing.slug}`);
       const detailData = await detailResponse.json();
-      console.log(`✅ Detailed listing: ${detailData.title}`);
+      console.log(`✅ Detailed listing: [ID: ${detailData.id}] ${detailData.title}`);
       console.log(`   💰 Reward: ${detailData.rewardAmount} ${detailData.token}`);
       console.log(`   🏢 Sponsor: ${detailData.sponsor.name} (${detailData.sponsor.isVerified ? '✅' : '❌'} verified)`);
       console.log(`   💬 Comments: ${detailData._count.Comments}`);
@@ -65,7 +65,7 @@ async function testMockApi() {
       
       if (dynamicData.length > 0) {
         const sample = dynamicData[0];
-        console.log(`   Sample: ${sample.title} (${sample.rewardAmount} ${sample.token})`);
+        console.log(`   Sample: [ID: ${sample.id}] ${sample.title} (${sample.rewardAmount} ${sample.token})`);
       }
     }
     console.log('');

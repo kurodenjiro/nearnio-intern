@@ -61,6 +61,7 @@ export class DatabaseService {
   private static instance: DatabaseService;
   private prisma: any = null;
   private usePrisma = false;
+  private nextListingId: number = 1;
 
   private constructor() {
     // Try to initialize Prisma, fall back to in-memory if not available
@@ -73,6 +74,10 @@ export class DatabaseService {
       debug('Prisma not available, using in-memory storage:', error);
       this.usePrisma = false;
     }
+  }
+
+  private generateUniqueListingId(): number {
+    return this.nextListingId++;
   }
 
   public static getInstance(): DatabaseService {
@@ -140,21 +145,22 @@ export class DatabaseService {
             };
             debug(listingData)
           if (this.usePrisma && this.prisma) {
-            // Use slug as id if id is missing
-            const listingId = listing.id || listing.slug;
+            // Generate unique ID independent of sequentialId
+            const uniqueId = this.generateUniqueListingId();
             
             await this.prisma.listing.upsert({
               where: { slug: listing.slug },
               update: listingData,
               create: {
-                id: listingId,
+                id: uniqueId,
                 slug: listing.slug,
                 ...listingData,
               },
             });
           } else {
-            // In-memory storage
-            inMemoryStorage.listings.set(listing.slug, {
+            // In-memory storage using unique ID as key
+            const uniqueId = this.generateUniqueListingId();
+            inMemoryStorage.listings.set(uniqueId.toString(), {
               ...listing,
               ...listingData,
             });
@@ -449,7 +455,7 @@ export class DatabaseService {
   }
 
   // Notification log operations
-  async logNotification(userId: number, listingId: string, success: boolean, error?: string): Promise<void> {
+  async logNotification(userId: number, listingId: number, success: boolean, error?: string): Promise<void> {
     try {
       if (this.usePrisma && this.prisma) {
         await this.prisma.notificationLog.create({
@@ -478,7 +484,7 @@ export class DatabaseService {
     }
   }
 
-  async getNotificationLog(userId: number, listingId: string): Promise<any | null> {
+  async getNotificationLog(userId: number, listingId: number): Promise<any | null> {
     try {
       if (this.usePrisma && this.prisma) {
         const notification = await this.prisma.notificationLog.findFirst({
