@@ -12,6 +12,8 @@ export interface ReminderNotification {
   deadline: Date;
   timeLeft: string;
   isFinal: boolean;
+  sponsorSlug?: string;
+  sequentialId?: number;
 }
 
 export class ReminderService {
@@ -137,6 +139,12 @@ export class ReminderService {
       for (const reminder of activeReminders) {
         const timeLeft = this.calculateTimeLeft(reminder.deadline);
         if (timeLeft) {
+          // Fetch listing data to get sponsorSlug and sequentialId
+          const listing = await this.databaseService.getPrismaClient().listing.findUnique({
+            where: { id: reminder.listingId },
+            select: { sponsorSlug: true, sequentialId: true }
+          });
+
           dueReminders.push({
             userId: Number(reminder.userId),
             listingId: reminder.listingId,
@@ -144,7 +152,9 @@ export class ReminderService {
             title: reminder.title,
             deadline: reminder.deadline,
             timeLeft: timeLeft,
-            isFinal: this.isFinalReminder(reminder.deadline)
+            isFinal: this.isFinalReminder(reminder.deadline),
+            sponsorSlug: listing?.sponsorSlug,
+            sequentialId: listing?.sequentialId
           });
         }
       }
@@ -201,26 +211,31 @@ export class ReminderService {
    */
   async sendReminderNotification(bot: any, reminder: ReminderNotification): Promise<void> {
     try {
+      // Use the correct URL format with sponsorSlug and sequentialId
+      const listingUrl = reminder.sponsorSlug && reminder.sequentialId 
+        ? `${process.env.SERVER_URL || 'https://nearn.io'}/${reminder.sponsorSlug}/${reminder.sequentialId}`
+        : `${process.env.SERVER_URL || 'https://nearn.io'}/${reminder.listingSlug}`;
+
       const message = `⏰ *Deadline Reminder\\!*
 
 *${reminder.title}*
 
 ${reminder.timeLeft}
 
-🔗 [View Details](${process.env.SERVER_URL || 'https://nearn.io'}/${reminder.listingSlug})`;
+🔗 [View Details](${listingUrl})`;
 
       const keyboard = {
         inline_keyboard: [
           [
             {
               text: '🔗 View Details',
-              url: `${process.env.SERVER_URL || 'https://nearn.io'}/${reminder.listingSlug}`
+              url: listingUrl
             }
           ],
           [
             {
               text: '🛑 Stop Reminders',
-              callback_data: `stop_reminder:${reminder.listingId}`
+              callback_data: `stop_reminder_${reminder.listingId}`
             }
           ]
         ]
