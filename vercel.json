@@ -11,15 +11,15 @@
   "crons": [
     {
       "path": "/api/cron/sync",
-      "schedule": "*/1 * * * *"
+      "schedule": "*/60 * * * *"
     },
     {
       "path": "/api/cron/notifications",
-      "schedule": "*/1 * * * *"
+      "schedule": "*/60 * * * *"
     },
     {
       "path": "/api/cron/reminders",
-      "schedule": "*/1 * * * *"
+      "schedule": "*/60 * * * *"
     }
   ]
 }
