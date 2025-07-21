@@ -159,7 +159,7 @@ export class ReminderService {
   /**
    * Calculate time left and return appropriate message
    */
-  private calculateTimeLeft(deadline: Date): string | null {
+  public calculateTimeLeft(deadline: Date): string | null {
     const now = new Date();
     const diffMs = deadline.getTime() - now.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -189,7 +189,7 @@ export class ReminderService {
   /**
    * Check if this is a final reminder (30 minutes or less)
    */
-  private isFinalReminder(deadline: Date): boolean {
+  public isFinalReminder(deadline: Date): boolean {
     const now = new Date();
     const diffMs = deadline.getTime() - now.getTime();
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
