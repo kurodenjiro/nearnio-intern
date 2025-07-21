@@ -1,7 +1,7 @@
 {
-  "name": "superteam-notifications-bot",
+  "name": "nearn-notifications-bot",
   "version": "1.0.0",
-  "description": "Telegram bot for Superteam bounty notifications",
+  "description": "Telegram bot for Nearn bounty notifications",
   "main": "src/index.ts",
   "author": "Mark Pavlov (https://github.com/sollidy)",
   "homepage": "https://github.com/sollidy/telegram-bot-vercel-boilerplate",
