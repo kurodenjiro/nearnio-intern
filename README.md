@@ -1,4 +1,4 @@
-# Superteam Bounty Notifications Bot
+# Nearn Bounty Notifications Bot
 
 A Telegram bot that sends notifications for new bounties from [Superteam](https://earn.superteam.fun) based on user preferences.
 

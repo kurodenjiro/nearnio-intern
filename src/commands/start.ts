@@ -2,6 +2,7 @@ import { Context } from 'telegraf';
 import createDebug from 'debug';
 import { NotificationService } from '../services/notification';
 import { StorageService } from '../services/storage';
+import { escapeMarkdownV2 } from '../utils/markdown';
 
 const debug = createDebug('bot:start_command');
 
@@ -24,16 +25,16 @@ const start = () => async (ctx: Context) => {
     const existingPreferences = await storage.getUserPreferences(userId);
     
     if (existingPreferences) {
-      const message = `👋 *Welcome back!*
+      const message = `👋 *Welcome back\\!*
 
-You already have preferences set up. Here's what you can do:
+You already have preferences set up\\. Here's what you can do:
 
-• /preferences - View your current settings
-• /edit - Modify your preferences
-• /stats - View your notification statistics
-• /help - Show all available commands
+• /preferences \\- View your current settings
+• /edit \\- Modify your preferences
+• /stats \\- View your notification statistics
+• /help \\- Show all available commands
 
-Would you like to update your preferences? Use /edit to modify them.`;
+Would you like to update your preferences\\? Use /edit to modify them\\.`;
       
       await ctx.replyWithMarkdownV2(message, { parse_mode: 'MarkdownV2' });
     } else {

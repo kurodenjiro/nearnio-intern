@@ -281,7 +281,7 @@ const handleBackButton = async (ctx: any, state: any, callbackData: string) => {
 
 const handleGeneralMessage = async (ctx: Context) => {
   await ctx.reply(
-    'Hi! I\'m a Superteam bounty notification bot. Use /help to see available commands or /setup to configure your preferences.'
+    'Hi! I\'m a Nearn bounty notification bot. Use /help to see available commands or /setup to configure your preferences.'
   );
 };
 
