@@ -34,7 +34,7 @@ You haven't set up your preferences yet\\. Use /setup to configure your bounty n
 Currently, you can edit your preferences by using /stop to delete them and then /setup to create new ones\\.
 
 *Your current settings:*
-💰 *Bounty Range:* $${userPreferences.minBounty}${userPreferences.maxBounty ? ` \\- $${userPreferences.maxBounty}` : '+'}
+💰 *Bounty Range:* $${userPreferences.minBounty}${userPreferences.maxBounty ? ` \\- $${userPreferences.maxBounty}` : '\\+'}
 📂 *Categories:* ${escapeMarkdownV2(userPreferences.categories.length > 0 ? userPreferences.categories.map((cat: string) => {
       const categoryMap: Record<string, string> = {
         'DEV': 'Development',

@@ -38,7 +38,7 @@ You haven't set up your preferences yet. Use /setup to configure your bounty not
 
 ${status}
 
-💰 *Bounty Range:* $${userPreferences.minBounty}${userPreferences.maxBounty ? ` \\- $${userPreferences.maxBounty}` : '+'}
+💰 *Bounty Range:* $${userPreferences.minBounty}${userPreferences.maxBounty ? ` \\- $${userPreferences.maxBounty}` : '\\+'}
 📂 *Categories:* ${escapeMarkdownV2(userPreferences.categories.length > 0 ? userPreferences.categories.map((cat: string) => {
       const categoryMap: Record<string, string> = {
         'DEV': 'Development',

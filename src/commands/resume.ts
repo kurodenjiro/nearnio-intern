@@ -1,6 +1,7 @@
 import { Context } from 'telegraf';
 import createDebug from 'debug';
 import { StorageService } from '../services/storage';
+import { escapeMarkdownV2 } from '../utils/markdown';
 
 const debug = createDebug('bot:resume_command');
 
@@ -20,9 +21,9 @@ const resume = () => async (ctx: Context) => {
     const userPreferences = await storage.getUserPreferences(userId);
     
     if (!userPreferences) {
-      const message = `❌ *No preferences found!*
+      const message = `❌ *No preferences found\\!*
 
-You haven't set up your preferences yet. Use /setup to configure your bounty notifications.`;
+You haven't set up your preferences yet\\. Use /setup to configure your bounty notifications\\.`;
       
       await ctx.replyWithMarkdownV2(message, { parse_mode: 'MarkdownV2' });
       return;
@@ -37,9 +38,9 @@ You haven't set up your preferences yet. Use /setup to configure your bounty not
 
     const message = `✅ *Notifications Resumed*
 
-You'll now receive notifications for new bounties that match your preferences.
+You'll now receive notifications for new bounties that match your preferences\\.
 
-Use /preferences to view your current settings.`;
+Use /preferences to view your current settings\\.`;
 
     await ctx.replyWithMarkdownV2(message, { parse_mode: 'MarkdownV2' });
     
