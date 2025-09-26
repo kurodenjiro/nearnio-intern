@@ -1,6 +1,6 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { URL } from 'url';
-import mockApiService from './services/mock-api';
+import { mockApiService } from './services/mock-api';
 
 const PORT = process.env.MOCK_API_PORT || 3001;
 

@@ -1,8 +1,8 @@
 export interface SuperteamListing {
-  id: string;
-  sequentialId?: string;
+  id: number;
+  sequentialId?: number;
   title: string;
-  rewardAmount: number;
+  rewardAmount: number | null;
   token: string;
   deadline: string;
   type: string;
@@ -40,5 +40,3 @@ export interface UserPreferences {
   createdAt: Date;
   updatedAt: Date;
 }
-
- 

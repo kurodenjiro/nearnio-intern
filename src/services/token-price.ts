@@ -140,9 +140,32 @@ export class TokenPriceService {
       uniqueTokens.map((token, index) => [token, prices[index]])
     );
 
-    return listings.map(listing => ({
-      ...listing,
-      usdAmount: listing.token === 'Any' ? listing.rewardAmount : listing.rewardAmount * tokenPrices[listing.token]
-    }));
+    return listings.map(listing => {
+      // Handle null rewardAmount values
+      if (listing.rewardAmount === null || listing.rewardAmount === undefined) {
+        return {
+          ...listing,
+          usdAmount: null // Keep null for listings without reward amounts
+        };
+      }
+      
+      // Handle null token values
+      if (!listing.token) {
+        return {
+          ...listing,
+          usdAmount: null
+        };
+      }
+      
+      // Calculate USD amount
+      const usdAmount = listing.token === 'Any' 
+        ? listing.rewardAmount 
+        : listing.rewardAmount * (tokenPrices[listing.token] || 1);
+      
+      return {
+        ...listing,
+        usdAmount
+      };
+    });
   }
-} 
+}

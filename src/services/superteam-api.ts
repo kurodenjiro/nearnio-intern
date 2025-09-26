@@ -1,5 +1,6 @@
 import createDebug from 'debug';
 import { SuperteamApiResponse, SuperteamListing } from '../types/superteam';
+import { mockApiService } from './mock-api';
 
 const debug = createDebug('bot:superteam-api');
 
@@ -29,10 +30,18 @@ export class SuperteamApiService {
     try {
       debug(`Fetching ${projectType} from Superteam API with categories: ${categories.join(', ')}`);
       
-      // Get user agent from environment or use default
-       
-       const response = await fetch(`${SUPERTEAM_API_BASE}`);
+      // Use mock API if enabled
+      if (process.env.USE_MOCK_API === 'true') {
+        debug('Using mock API service');
+        const mockData = mockApiService.getMockData();
+        this.lastFetchTime = new Date();
+        this.cachedListings = mockData as SuperteamListing[];
+        debug(`Fetched ${mockData.length} listings from mock API`);
+        return mockData as SuperteamListing[];
+      }
       
+      // Get user agent from environment or use default
+      const response = await fetch(`${SUPERTEAM_API_BASE}`);
 
       if (!response.ok) {
         if (response.status === 429) {
@@ -63,8 +72,6 @@ export class SuperteamApiService {
     }
   }
 
-
-
   getLastFetchTime(): Date | null {
     return this.lastFetchTime;
   }
@@ -72,4 +79,4 @@ export class SuperteamApiService {
   getCachedListings(): SuperteamListing[] {
     return this.cachedListings;
   }
-} 
+}

@@ -6,10 +6,10 @@
   "author": "Mark Pavlov (https://github.com/sollidy)",
   "homepage": "https://github.com/sollidy/telegram-bot-vercel-boilerplate",
   "dependencies": {
+    "@prisma/client": "^5.7.1",
     "@vercel/node": "^5.1.16",
     "dotenv-cli": "^8.0.0",
-    "telegraf": "^4.16.3",
-    "@prisma/client": "^5.7.1"
+    "telegraf": "^4.16.3"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
@@ -18,9 +18,9 @@
     "debug": "^4.3.7",
     "nodemon": "^3.1.7",
     "prettier": "^3.3.3",
+    "prisma": "^5.7.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3",
-    "prisma": "^5.7.1"
+    "typescript": "^5.6.3"
   },
   "scripts": {
     "dev": "DEBUG=bot* dotenv -- nodemon -e ts -x ts-node src/index.ts",
@@ -39,6 +39,11 @@
     "test-reminder-button": "ts-node scripts/test-reminder-button.ts",
     "test-reminder-messages": "ts-node scripts/test-reminder-messages.ts",
     "test-markdown": "ts-node scripts/test-markdown-escaping.ts",
-    "test-vercel-cron": "ts-node scripts/test-vercel-cron.ts"
+    "test-vercel-cron": "ts-node scripts/test-vercel-cron.ts",
+    "test-null-reward": "ts-node scripts/test-null-reward.ts",
+    "debug-sync": "ts-node scripts/debug-sync.ts",
+    "check-database": "ts-node scripts/check-database.ts",
+    "debug-sync-detailed": "ts-node scripts/debug-sync-detailed.ts",
+    "test-prisma-direct": "ts-node scripts/test-prisma-direct.ts"
   }
 }

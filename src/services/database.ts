@@ -286,6 +286,12 @@ export class DatabaseService {
         const listingsWithUSD = await tokenPriceService.convertListingsToUSD(listings);
         
         const filteredListings = listingsWithUSD.filter((listing: any) => {
+          // Handle listings with null reward amounts (e.g., projects with variable compensation)
+          if (listing.usdAmount === null || listing.usdAmount === undefined) {
+            // Include listings without reward amounts if minBounty is 0
+            return minBounty === 0;
+          }
+          // Filter by bounty range using USD amount
           // Filter by bounty range using USD amount
           if (listing.usdAmount < minBounty) return false;
           if (maxBounty && listing.usdAmount > maxBounty) return false;
@@ -320,6 +326,12 @@ export class DatabaseService {
         const listingsWithUSD = await tokenPriceService.convertListingsToUSD(filteredListings);
         
         return listingsWithUSD.filter((listing: any) => {
+          // Handle listings with null reward amounts (e.g., projects with variable compensation)
+          if (listing.usdAmount === null || listing.usdAmount === undefined) {
+            // Include listings without reward amounts if minBounty is 0
+            return minBounty === 0;
+          }
+          // Filter by bounty range using USD amount
           // Filter by bounty range using USD amount
           if (listing.usdAmount < minBounty) return false;
           if (maxBounty && listing.usdAmount > maxBounty) return false;

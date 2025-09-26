@@ -3,7 +3,7 @@ import { join } from 'path';
 
 interface MockListing {
   id: number;
-  rewardAmount: number;
+  rewardAmount: number | null;
   deadline: string;
   type: 'bounty' | 'project';
   title: string;
@@ -21,12 +21,14 @@ interface MockListing {
   status: 'OPEN' | 'CLOSED';
   _count: {
     Comments: number;
+    Submission: number;
   };
   sponsor: {
     name: string;
     slug: string;
     logo: string;
     isVerified: boolean;
+    st: boolean;
   };
 }
 
@@ -49,12 +51,12 @@ class MockApiService {
   private initializeMockData() {
     this.mockData = [
       {
-        id: this.generateUniqueId(), // Independent unique ID (1)
+        id: this.generateUniqueId(),
         rewardAmount: 3000,
         deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         type: 'bounty',
         title: 'Automate Generation of TypeScript RPC Client for NEAR Protocol',
-        sequentialId: 13, // Separate from ID
+        sequentialId: 13,
         token: 'NEAR',
         isPublished: true,
         isPrivate: false,
@@ -67,125 +69,45 @@ class MockApiService {
         maxRewardAsk: null,
         status: 'OPEN',
         _count: {
-          Comments: 14
+          Comments: 14,
+          Submission: 3
         },
         sponsor: {
           name: 'NEAR DevHub',
           slug: 'devhub',
           logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1745002189/qutym1mzzo3ba5qwshia.png',
-          isVerified: false
+          isVerified: false,
+          st: false
         }
       },
       {
-        id: this.generateUniqueId(), // Independent unique ID (2)
-        rewardAmount: 250,
+        id: this.generateUniqueId(),
+        rewardAmount: null, // NULL REWARD AMOUNT FOR TESTING
         deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-        type: 'bounty',
-        title: 'Create a DAO Reviewer Shade Agent Tutorial',
-        sequentialId: 1, // Separate from ID
-        token: 'USDC',
+        type: 'project',
+        title: 'Chain Abstracted Relayer - Variable Compensation',
+        sequentialId: 999,
+        token: 'Any',
         isPublished: true,
         isPrivate: false,
         winnersAnnouncedAt: null,
-        slug: 'create-a-dao-reviewer-shade-agent-tutorial',
+        slug: 'chain-abstracted-relayer-variable-compensation',
         isWinnersAnnounced: false,
-        isFeatured: false,
-        compensationType: 'fixed',
+        isFeatured: true,
+        compensationType: 'variable',
         minRewardAsk: null,
         maxRewardAsk: null,
         status: 'OPEN',
         _count: {
-          Comments: 0
+          Comments: 5,
+          Submission: 0
         },
         sponsor: {
-          name: 'Blockchain Acceleration Foundation',
-          slug: 'thebafnetwork',
-          logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1752765602/d6dvsw3kfaegphpz6hul.png',
-          isVerified: false
-        }
-      },
-      {
-        id: this.generateUniqueId(), // Independent unique ID (3)
-        rewardAmount: 102,
-        deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        type: 'bounty',
-        title: 'StakeWars with Qbit',
-        sequentialId: 1, // Separate from ID
-        token: 'NEAR',
-        isPublished: true,
-        isPrivate: false,
-        winnersAnnouncedAt: null,
-        slug: 'stakewars-with-qbit',
-        isWinnersAnnounced: false,
-        isFeatured: false,
-        compensationType: 'fixed',
-        minRewardAsk: null,
-        maxRewardAsk: null,
-        status: 'OPEN',
-        _count: {
-          Comments: 7
-        },
-        sponsor: {
-          name: 'Q-Bit',
-          slug: 'qbit',
-          logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1752159707/lr9egnkdpolvpirkg6et.png',
-          isVerified: false
-        }
-      },
-      {
-        id: this.generateUniqueId(), // Independent unique ID (4)
-        rewardAmount: 120,
-        deadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-        type: 'bounty',
-        title: 'Make a Background Illustration for Intear Wallet',
-        sequentialId: 1, // Separate from ID
-        token: 'USDC',
-        isPublished: true,
-        isPrivate: false,
-        winnersAnnouncedAt: null,
-        slug: 'intear-wallet-background',
-        isWinnersAnnounced: false,
-        isFeatured: false,
-        compensationType: 'fixed',
-        minRewardAsk: null,
-        maxRewardAsk: null,
-        status: 'OPEN',
-        _count: {
-          Comments: 3
-        },
-        sponsor: {
-          name: 'Intear',
-          slug: 'intear',
-          logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1750257047/ibvndqwvdwhkxexl0fjv.png',
-          isVerified: false
-        }
-      },
-      {
-        id: this.generateUniqueId(), // Independent unique ID (5)
-        rewardAmount: 250,
-        deadline: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
-        type: 'bounty',
-        title: 'Implement Sign NEP-413 off-chain messages in near-cli-rs',
-        sequentialId: 20, // Separate from ID
-        token: 'USDC',
-        isPublished: true,
-        isPrivate: false,
-        winnersAnnouncedAt: null,
-        slug: 'implement-sign-nep-413-off-chain-messages-in-near-cli-rs',
-        isWinnersAnnounced: false,
-        isFeatured: false,
-        compensationType: 'fixed',
-        minRewardAsk: null,
-        maxRewardAsk: null,
-        status: 'OPEN',
-        _count: {
-          Comments: 3
-        },
-        sponsor: {
-          name: 'NEAR DevHub',
-          slug: 'devhub',
-          logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1745002189/qutym1mzzo3ba5qwshia.png',
-          isVerified: false
+          name: 'Infrastructure Committee',
+          slug: 'infra-committee',
+          logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1745424790/lpbjybyqs7nf9kxg4kki.png',
+          isVerified: false,
+          st: false
         }
       }
     ];
@@ -197,22 +119,14 @@ class MockApiService {
       'NFT Marketplace Integration',
       'Cross-Chain Bridge Development',
       'DAO Governance Platform',
-      'DeFi Yield Optimizer',
-      'Web3 Social Network',
-      'Blockchain Explorer Enhancement',
-      'Smart Contract Library',
-      'Token Launch Platform',
-      'Decentralized Exchange'
+      'DeFi Yield Optimizer'
     ];
 
     const tokens = ['NEAR', 'USDC', 'USDT', 'Any'];
     const types: ('bounty' | 'project')[] = ['bounty', 'project'];
     const sponsors = [
       { name: 'NEAR DevHub', slug: 'devhub', verified: false, logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1745002189/qutym1mzzo3ba5qwshia.png' },
-      { name: 'Blockchain Acceleration Foundation', slug: 'thebafnetwork', verified: false, logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1752765602/d6dvsw3kfaegphpz6hul.png' },
-      { name: 'Q-Bit', slug: 'qbit', verified: false, logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1752159707/lr9egnkdpolvpirkg6et.png' },
-      { name: 'Intear', slug: 'intear', verified: false, logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1750257047/ibvndqwvdwhkxexl0fjv.png' },
-      { name: 'Firehose', slug: 'firehose', verified: false, logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1749299030/oni6wy19znu5hn9lkims.png' }
+      { name: 'Blockchain Acceleration Foundation', slug: 'thebafnetwork', verified: false, logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1752765602/d6dvsw3kfaegphpz6hul.png' }
     ];
 
     const randomTitle = titles[Math.floor(Math.random() * titles.length)];
@@ -224,130 +138,78 @@ class MockApiService {
     const randomSequentialId = Math.floor(Math.random() * 100) + 1;
 
     return {
-      id: this.generateUniqueId(), // Independent unique ID
+      id: this.generateUniqueId(),
       rewardAmount: randomReward,
       deadline: randomDeadline.toISOString(),
       type: randomType,
       title: randomTitle,
-      sequentialId: randomSequentialId, // Separate from ID
+      sequentialId: randomSequentialId,
       token: randomToken,
       isPublished: true,
       isPrivate: false,
       winnersAnnouncedAt: null,
       slug: randomTitle.toLowerCase().replace(/\s+/g, '-'),
       isWinnersAnnounced: false,
-      isFeatured: Math.random() > 0.8, // 20% chance to be featured
+      isFeatured: Math.random() > 0.8,
       compensationType: 'fixed',
       minRewardAsk: null,
       maxRewardAsk: null,
       status: 'OPEN',
       _count: {
-        Comments: Math.floor(Math.random() * 20)
+        Comments: Math.floor(Math.random() * 20),
+        Submission: Math.floor(Math.random() * 10)
       },
       sponsor: {
         name: randomSponsor.name,
         slug: randomSponsor.slug,
         logo: randomSponsor.logo,
-        isVerified: randomSponsor.verified
+        isVerified: randomSponsor.verified,
+        st: false
       }
     };
   }
 
-
-
   private updateMockData() {
-    // Always keep some base listings but modify them
     if (this.mockData.length === 0) {
       this.initializeMockData();
     }
 
-    // Randomly remove some listings (30% chance)
     this.mockData = this.mockData.filter(() => Math.random() > 0.3);
 
-    // Add 1-4 new listings
     const newListingsCount = Math.floor(Math.random() * 4) + 1;
     for (let i = 0; i < newListingsCount; i++) {
       this.mockData.push(this.generateNewListing());
     }
 
-    // Update existing listings with fresh data
     this.mockData.forEach(listing => {
-      // 50% chance to update each listing
       if (Math.random() < 0.5) {
-        // Update comment count
         listing._count.Comments += Math.floor(Math.random() * 5);
         
-        // Update reward amount (small changes)
-        const rewardChange = Math.floor(Math.random() * 100) - 50; // -50 to +50
-        listing.rewardAmount = Math.max(10, listing.rewardAmount + rewardChange);
+        if (listing.rewardAmount !== null) {
+          const rewardChange = Math.floor(Math.random() * 100) - 50;
+          listing.rewardAmount = Math.max(10, listing.rewardAmount + rewardChange);
+        }
         
-        // Update deadline (extend or shorten)
-        const deadlineChange = Math.floor(Math.random() * 7) - 3; // -3 to +3 days
+        const deadlineChange = Math.floor(Math.random() * 7) - 3;
         const currentDeadline = new Date(listing.deadline);
         currentDeadline.setDate(currentDeadline.getDate() + deadlineChange);
         listing.deadline = currentDeadline.toISOString();
         
-        // Randomly change status
         if (Math.random() < 0.1) {
           listing.status = listing.status === 'OPEN' ? 'CLOSED' : 'OPEN';
         }
         
-        // Randomly announce winners
         if (Math.random() < 0.05) {
           listing.isWinnersAnnounced = true;
           listing.winnersAnnouncedAt = new Date().toISOString();
         }
       }
     });
-
-    // Shuffle the array to change order
-    this.mockData.sort(() => Math.random() - 0.5);
-
-    console.log(`[Mock API] Generated fresh data: ${this.mockData.length} listings`);
   }
 
-  private updateEnvFile() {
-    try {
-      let envContent = '';
-      
-      if (existsSync(this.envFilePath)) {
-        envContent = readFileSync(this.envFilePath, 'utf8');
-      }
-
-      // Update or add SUPERTEAM_API_BASE
-      const apiBaseRegex = /^SUPERTEAM_API_BASE=.*$/m;
-      const newApiBase = 'SUPERTEAM_API_BASE=http://localhost:3001/mock-api';
-      
-      if (apiBaseRegex.test(envContent)) {
-        envContent = envContent.replace(apiBaseRegex, newApiBase);
-      } else {
-        envContent += `\n${newApiBase}\n`;
-      }
-
-      // Add mock API configuration
-      const mockConfig = `
-# Mock API Configuration
-MOCK_API_ENABLED=true
-MOCK_API_PORT=3001
-MOCK_API_UPDATE_INTERVAL=60000
-`;
-
-      if (!envContent.includes('MOCK_API_ENABLED')) {
-        envContent += mockConfig;
-      }
-
-      writeFileSync(this.envFilePath, envContent);
-      console.log('[Mock API] Updated .env file');
-    } catch (error) {
-      console.error('[Mock API] Error updating .env file:', error);
-    }
-  }
-
-  public startAutoUpdate() {
-    // Update every minute (60000ms)
+  private startAutoUpdate() {
     this.updateInterval = setInterval(() => {
       this.updateMockData();
-      this.updateEnvFile();
     }, 60000);
 
     console.log('[Mock API] Auto-update started (every 1 minute)');
@@ -362,36 +224,21 @@ MOCK_API_UPDATE_INTERVAL=60000
   }
 
   public getMockData(): MockListing[] {
-    // Generate fresh data on each request
     this.updateMockData();
     return this.mockData;
   }
 
-  public getMockDataAsApiResponse() {
-    // Generate fresh data on each request
-    this.updateMockData();
-    return {
-      data: this.mockData,
-      meta: {
-        total: this.mockData.length,
-        page: 1,
-        limit: 50,
-        hasMore: false
-      }
-    };
-  }
-
   public getDetailedListing(slug: string): MockListing | null {
-    return this.mockData.find(listing => listing.slug === slug || listing.sequentialId.toString() === slug) || null;
+    return this.mockData.find(listing => 
+      listing.slug === slug || listing.sequentialId.toString() === slug
+    ) || null;
   }
 
   public resetMockData() {
+    this.mockData = [];
     this.initializeMockData();
     console.log('[Mock API] Mock data reset');
   }
-
-
 }
 
 export const mockApiService = new MockApiService();
-export default mockApiService; 
