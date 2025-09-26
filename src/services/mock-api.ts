@@ -5,7 +5,7 @@ interface MockListing {
   id: number;
   rewardAmount: number | null;
   deadline: string;
-  type: 'bounty' | 'project';
+  type: 'bounty' | 'project' | 'sponsorship';
   title: string;
   sequentialId: number;
   token: string;
@@ -109,6 +109,36 @@ class MockApiService {
           isVerified: false,
           st: false
         }
+      },
+      {
+        id: this.generateUniqueId(),
+        rewardAmount: 5000,
+        deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        type: 'sponsorship',
+        title: 'NEAR Protocol Conference 2024 Sponsorship',
+        sequentialId: 1000,
+        token: 'NEAR',
+        isPublished: true,
+        isPrivate: false,
+        winnersAnnouncedAt: null,
+        slug: 'near-protocol-conference-2024-sponsorship',
+        isWinnersAnnounced: false,
+        isFeatured: true,
+        compensationType: 'fixed',
+        minRewardAsk: null,
+        maxRewardAsk: null,
+        status: 'OPEN',
+        _count: {
+          Comments: 12,
+          Submission: 3
+        },
+        sponsor: {
+          name: 'NEAR Foundation',
+          slug: 'near-foundation',
+          logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1745002189/qutym1mzzo3ba5qwshia.png',
+          isVerified: true,
+          st: false
+        }
       }
     ];
   }
@@ -123,7 +153,7 @@ class MockApiService {
     ];
 
     const tokens = ['NEAR', 'USDC', 'USDT', 'Any'];
-    const types: ('bounty' | 'project')[] = ['bounty', 'project'];
+    const types: ('bounty' | 'project' | 'sponsorship')[] = ['bounty', 'project', 'sponsorship'];
     const sponsors = [
       { name: 'NEAR DevHub', slug: 'devhub', verified: false, logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1745002189/qutym1mzzo3ba5qwshia.png' },
       { name: 'Blockchain Acceleration Foundation', slug: 'thebafnetwork', verified: false, logo: 'https://res.cloudinary.com/dyydcyyje/image/upload/v1752765602/d6dvsw3kfaegphpz6hul.png' }

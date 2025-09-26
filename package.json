@@ -44,6 +44,8 @@
     "debug-sync": "ts-node scripts/debug-sync.ts",
     "check-database": "ts-node scripts/check-database.ts",
     "debug-sync-detailed": "ts-node scripts/debug-sync-detailed.ts",
-    "test-prisma-direct": "ts-node scripts/test-prisma-direct.ts"
+    "test-prisma-direct": "ts-node scripts/test-prisma-direct.ts",
+    "test-sponsorship": "ts-node scripts/test-sponsorship.ts",
+    "test-submission-reminders": "ts-node scripts/test-submission-reminders.ts"
   }
 }

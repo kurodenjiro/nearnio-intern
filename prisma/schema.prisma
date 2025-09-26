@@ -89,3 +89,20 @@ model UserReminder {
   @@unique([userId, listingId])
   @@map("user_reminders")
 }
+
+model SubmissionReminder {
+  id          Int      @id @default(autoincrement())
+  userId      BigInt
+  listingId   Int
+  listingSlug String
+  title       String
+  sponsorSlug String
+  sequentialId Int
+  isActive    Boolean  @default(true)
+  lastCheckTime DateTime @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([userId, listingId])
+  @@map("submission_reminders")
+}

@@ -1,0 +1,26 @@
+// Helper function to create project type selection keyboard
+const createProjectTypeKeyboard = (): InlineKeyboardMarkup => {
+  const keyboard = [];
+  
+  // Project type options
+  keyboard.push([
+    { text: 'Bounty', callback_data: 'project_type_bounty' },
+    { text: 'Project', callback_data: 'project_type_project' }
+  ]);
+  
+  keyboard.push([
+    { text: 'Sponsorship', callback_data: 'project_type_sponsorship' }
+  ]);
+  
+  keyboard.push([
+    { text: 'All', callback_data: 'project_type_all' }
+  ]);
+  
+  // Add back button
+  keyboard.push([{
+    text: '⬅️ Back',
+    callback_data: 'back_project_type'
+  }]);
+  
+  return { inline_keyboard: keyboard };
+};

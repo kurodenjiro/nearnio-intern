@@ -51,7 +51,7 @@ If you want to start fresh, use /stop to delete your current preferences first\\
     }
 
     // Start setup process
-    startSetup(userId);
+    await startSetup(ctx);
     
     const message = `🎯 *Let's set up your bounty preferences\\!*
 

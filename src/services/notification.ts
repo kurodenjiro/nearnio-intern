@@ -117,6 +117,10 @@ export class NotificationService {
           {
             text: reminderButtonText,
             callback_data: reminderCallbackData
+          },
+          {
+            text: '📝 Remind Submission',
+            callback_data: `add_submission_reminder_${listing.id || listing.sequentialId}`
           }
         ]
       ]

@@ -16,6 +16,7 @@ const mapUserCategoryToInternal = (userCategory: string): string => {
     'Content': 'CONTENT',
     'Growth': 'GROWTH',
     'Community': 'COMMUNITY',
+    'Sponsorship': 'SPONSORSHIP',
     'Other': 'OTHER',
     'All': 'All'
   };
@@ -31,6 +32,7 @@ const mapInternalCategoryToUser = (internalCategory: string): string => {
     'CONTENT': 'Content',
     'GROWTH': 'Growth',
     'COMMUNITY': 'Community',
+    'SPONSORSHIP': 'Sponsorship',
     'OTHER': 'Other',
     'All': 'All'
   };
@@ -46,10 +48,10 @@ const setupStates = new Map<number, {
 
 // Available categories and project types
 const AVAILABLE_CATEGORIES = [
-  'All', 'Content', 'Design', 'Development', 'Other'
+  'All', 'Content', 'Design', 'Development', 'Sponsorship', 'Other'
 ];
 
-const PROJECT_TYPES = ['bounty', 'project', 'all'];
+const PROJECT_TYPES = ['bounty', 'project', 'sponsorship', 'all'];
 
 // Bounty range options
 const BOUNTY_RANGES = [
@@ -84,9 +86,14 @@ const createCategoryKeyboard = (): InlineKeyboardMarkup => {
     { text: 'Design', callback_data: 'category_Design' }
   ]);
   
-  // Third row: Development and Other
+  // Third row: Development and Sponsorship
   keyboard.push([
     { text: 'Development', callback_data: 'category_Development' },
+    { text: 'Sponsorship', callback_data: 'category_Sponsorship' }
+  ]);
+  
+  // Fourth row: Other
+  keyboard.push([
     { text: 'Other', callback_data: 'category_Other' }
   ]);
   
@@ -103,52 +110,48 @@ const createCategoryKeyboard = (): InlineKeyboardMarkup => {
 const createBountyRangeKeyboard = (): InlineKeyboardMarkup => {
   const keyboard = [];
   
-  // First row: Range options
-  keyboard.push([
-    { text: '0-50$ (Micro)', callback_data: 'bounty_range_0_50' },
-    { text: '50$-100$ (Small)', callback_data: 'bounty_range_51_100' }
-  ]);
+  // Add bounty range options
+  BOUNTY_RANGES.forEach(range => {
+    keyboard.push([{
+      text: range.text,
+      callback_data: `bounty_${range.min}_${range.max || 'unlimited'}`
+    }]);
+  });
   
-  // Second row: More range options
-  keyboard.push([
-    { text: '100$-250$ (Medium)', callback_data: 'bounty_range_101_250' },
-    { text: '250$-500$ (Large)', callback_data: 'bounty_range_251_500' }
-  ]);
+  // Add minimum bounty options
+  MIN_BOUNTY_RANGES.forEach(range => {
+    keyboard.push([{
+      text: range.text,
+      callback_data: `min_bounty_${range.min}`
+    }]);
+  });
   
-  // Third row: Premium and Enterprise
-  keyboard.push([
-    { text: '500$-1000$ (Premium)', callback_data: 'bounty_range_501_1000' },
-    { text: '>1000$ (Enterprise)', callback_data: 'bounty_range_1001_none' }
-  ]);
-  
-  // Fourth row: Minimum options
-  keyboard.push([
-    { text: '0$+ (Any Amount)', callback_data: 'bounty_range_0_none' },
-    { text: '100$+ (Min 100$)', callback_data: 'bounty_range_100_none' }
-  ]);
-  
-  // Fifth row: More minimum options
-  keyboard.push([
-    { text: '250$+ (Min 250$)', callback_data: 'bounty_range_250_none' },
-    { text: '500$+ (Min 500$)', callback_data: 'bounty_range_500_none' }
-  ]);
+  // Add back button
+  keyboard.push([{
+    text: '⬅️ Back',
+    callback_data: 'back_bounty_range'
+  }]);
   
   return { inline_keyboard: keyboard };
 };
 
 // Helper function to create project type selection keyboard
+// Helper function to create project type selection keyboard
 const createProjectTypeKeyboard = (): InlineKeyboardMarkup => {
   const keyboard = [];
   
-  // First row: All (exclusive option)
-  keyboard.push([
-    { text: 'All', callback_data: 'project_type_all' }
-  ]);
-  
-  // Second row: Bounty and Project
+  // Project type options
   keyboard.push([
     { text: 'Bounty', callback_data: 'project_type_bounty' },
     { text: 'Project', callback_data: 'project_type_project' }
+  ]);
+  
+  keyboard.push([
+    { text: 'Sponsorship', callback_data: 'project_type_sponsorship' }
+  ]);
+  
+  keyboard.push([
+    { text: 'All', callback_data: 'project_type_all' }
   ]);
   
   // Add back button
@@ -159,182 +162,60 @@ const createProjectTypeKeyboard = (): InlineKeyboardMarkup => {
   
   return { inline_keyboard: keyboard };
 };
-
-export const handleMessage = async (ctx: Context) => {
-  const userId = ctx.from?.id;
-  const messageText = ctx.message && 'text' in ctx.message ? ctx.message.text : null;
-  
-  if (!userId || !messageText || messageText.startsWith('/')) {
-    return;
-  }
-
-  const storage = DatabaseService.getInstance();
-  const setupState = setupStates.get(userId);
-
-  if (setupState) {
-    await handleSetupStep(ctx, setupState);
-  } else {
-    await handleGeneralMessage(ctx);
-  }
-};
-
-const handleSetupStep = async (ctx: Context, state: any) => {
-  const userId = ctx.from?.id;
-  const messageText = ctx.message && 'text' in ctx.message ? ctx.message.text : null;
-  
-  if (!userId || !messageText) return;
-
-  try {
-    // Categories and Project Type are now handled via buttons (callback queries)
-    if (state.step === 'categories' || state.step === 'projectType') {
-      await ctx.reply('Please use the buttons above to make your selection.');
-    }
-  } catch (error) {
-    debug('Error in setup step:', error);
-    await ctx.reply('❌ An error occurred. Please try /setup again.');
-    setupStates.delete(userId);
-  }
-};
-
-
-
-
-
-
-
-const handleBountyRangeSelection = async (ctx: any, state: any, callbackData: string) => {
-  const rangeData = callbackData.replace('bounty_range_', '');
-  const [minStr, maxStr] = rangeData.split('_');
-  
-  const minBounty = parseInt(minStr);
-  const maxBounty = maxStr === 'none' ? undefined : parseInt(maxStr);
-  
-  state.data.minBounty = minBounty;
-  state.data.maxBounty = maxBounty;
-  
-  // Proceed to categories step
-  state.step = 'categories';
-  
-  const maxText = maxBounty ? `$${maxBounty}` : 'No maximum';
-  
-  // Find range name from either BOUNTY_RANGES or MIN_BOUNTY_RANGES
-  let rangeName = BOUNTY_RANGES.find(range => range.min === minBounty && range.max === maxBounty)?.name;
-  if (!rangeName) {
-    rangeName = MIN_BOUNTY_RANGES.find(range => range.min === minBounty && range.max === maxBounty)?.name;
-  }
-  if (!rangeName) {
-    rangeName = 'Custom Range';
-  }
-  
-  await ctx.reply(
-    `✅ Bounty range set to: $${minBounty} \\- ${escapeMarkdownV2(maxText)} \\(${escapeMarkdownV2(rangeName)}\\)\n\n` +
-    `*Step 2: Categories*\n` +
-    `Which categories are you interested in?\n\n` +
-    `Select categories from the buttons below:`,
-    { 
-      parse_mode: 'MarkdownV2',
-      reply_markup: createCategoryKeyboard()
-    }
-  );
-  
-  await ctx.answerCbQuery(`Selected: ${rangeName}`);
-};
-
-const handleBackButton = async (ctx: any, state: any, callbackData: string) => {
-  const backStep = callbackData.replace('back_', '');
-  
-  switch (backStep) {
-    case 'categories':
-      // Go back to bounty range
-      state.step = 'bountyRange';
-      await ctx.reply(
-        `⬅️ *Back to Step 1: Bounty Range*\n\n` +
-        `What bounty range are you interested in?\n\n` +
-        `Select from the buttons below:`,
-        { 
-          parse_mode: 'MarkdownV2',
-          reply_markup: createBountyRangeKeyboard()
-        }
-      );
-      await ctx.answerCbQuery('Back to bounty range selection');
-      break;
-      
-    case 'project_type':
-      // Go back to categories
-      state.step = 'categories';
-      await ctx.reply(
-        `⬅️ *Back to Step 2: Categories*\n\n` +
-        `Which categories are you interested in?\n\n` +
-        `Select categories from the buttons below:`,
-        { 
-          parse_mode: 'MarkdownV2',
-          reply_markup: createCategoryKeyboard()
-        }
-      );
-      await ctx.answerCbQuery('Back to category selection');
-      break;
-      
-    default:
-      await ctx.answerCbQuery('Invalid back action.');
-  }
-};
-
-const handleGeneralMessage = async (ctx: Context) => {
-  await ctx.reply(
-    'Hi! I\'m a Nearn bounty notification bot. Use /help to see available commands or /setup to configure your preferences.'
-  );
-};
-
-// Helper function to start setup process
-export const startSetup = (userId: number) => {
-  setupStates.set(userId, {
-    step: 'bountyRange',
-    data: {}
-  });
-};
-
-// Export keyboard creation functions
-export { createBountyRangeKeyboard, createCategoryKeyboard, createProjectTypeKeyboard };
-
-// Handle callback queries (button clicks)
 export const handleCallbackQuery = async (ctx: any) => {
-  const userId = ctx.from?.id;
-  const callbackData = ctx.callbackQuery?.data;
-  
-  if (!userId || !callbackData) {
-    await ctx.answerCbQuery();
-    return;
-  }
-
   try {
-    // Handle reminder callbacks (work outside of setup)
+    const callbackData = ctx.callbackQuery.data;
+    const userId = ctx.from?.id;
+    
+    if (!userId) {
+      await ctx.answerCbQuery('Unable to identify user. Please try again.');
+      return;
+    }
+
+    debug('Handling callback query:', callbackData);
+
+    // Handle reminder-related callbacks outside of setup state
     if (callbackData.startsWith('add_reminder_')) {
       await handleAddReminder(ctx, callbackData);
       return;
-    } else if (callbackData.startsWith('stop_reminder_')) {
+    }
+
+    if (callbackData.startsWith('stop_reminder_')) {
       await handleStopReminder(ctx, callbackData);
       return;
     }
 
-    // Handle setup callbacks (require active setup session)
-    const setupState = setupStates.get(userId);
-    
-    if (!setupState) {
-      await ctx.answerCbQuery('No active setup session. Use /setup to start.');
-      return;
+    // Get or create setup state for this user
+    let state = setupStates.get(userId);
+    if (!state) {
+      state = {
+        step: 'bountyRange',
+        data: {}
+      };
+      setupStates.set(userId, state);
     }
 
-    if (callbackData.startsWith('bounty_range_')) {
-      await handleBountyRangeSelection(ctx, setupState, callbackData);
+    // Handle different callback types
+    if (callbackData.startsWith('bounty_')) {
+      await handleBountyRangeSelection(ctx, state, callbackData);
+    } else if (callbackData.startsWith('min_bounty_')) {
+      await handleMinBountySelection(ctx, state, callbackData);
     } else if (callbackData.startsWith('category_')) {
-      await handleCategorySelection(ctx, setupState, callbackData);
+      await handleCategorySelection(ctx, state, callbackData);
     } else if (callbackData.startsWith('project_type_')) {
-      await handleProjectTypeSelection(ctx, setupState, callbackData);
-    } else if (callbackData.startsWith('back_')) {
-      await handleBackButton(ctx, setupState, callbackData);
+      await handleProjectTypeSelection(ctx, state, callbackData);
+    } else if (callbackData === 'back_categories') {
+      await handleBackToCategories(ctx, state);
+    } else if (callbackData === 'back_bounty_range') {
+      await handleBackToBountyRange(ctx, state);
+    } else if (callbackData === 'back_project_type') {
+      await handleBackToProjectType(ctx, state);
+    } else {
+      await ctx.answerCbQuery('Unknown action. Please try again.');
     }
+
   } catch (error) {
-    debug('Error in callback query:', error);
+    debug('Error in callback query handler:', error);
     await ctx.answerCbQuery('An error occurred. Please try again.');
   }
 };
@@ -376,233 +257,420 @@ const handleCategorySelection = async (ctx: any, state: any, callbackData: strin
 };
 
 const handleProjectTypeSelection = async (ctx: any, state: any, callbackData: string) => {
+  const userId = ctx.from?.id;
   const projectType = callbackData.replace('project_type_', '');
   
-  if (!PROJECT_TYPES.includes(projectType)) {
-    await ctx.answerCbQuery('Invalid project type selected.');
-    return;
-  }
-  
   state.data.projectType = projectType;
+  state.step = 'complete';
   
-  // Complete the setup
-  const userId = ctx.from?.id;
-  const chatId = ctx.chat?.id;
-  
-  if (!userId || !chatId) {
-    await ctx.answerCbQuery('Error: Unable to identify user.');
-    return;
-  }
-  
-  const storage = DatabaseService.getInstance();
-  
-  state.data.userId = userId;
-  state.data.chatId = chatId;
-  state.data.isActive = true;
-  state.data.createdAt = new Date();
-  state.data.updatedAt = new Date();
-  
-  // Save user preferences
-  await storage.saveUserPreferences(state.data as UserPreferences);
+  // Save preferences to database
+  const databaseService = DatabaseService.getInstance();
+  await databaseService.saveUserPreferences({
+    userId: userId,
+    chatId: ctx.chat?.id || userId,
+    categories: state.data.categories || ['All'],
+    minBounty: state.data.minBounty || 0,
+    maxBounty: state.data.maxBounty,
+    projectType: projectType,
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
   
   // Clear setup state
   setupStates.delete(userId);
   
-  const maxText = state.data.maxBounty ? `$${state.data.maxBounty}` : 'No maximum';
+  const categoriesText = state.data.categories?.map((cat: string) => mapInternalCategoryToUser(cat)).join(', ') || 'All';
+  const bountyText = state.data.maxBounty 
+    ? `$${state.data.minBounty}-$${state.data.maxBounty}`
+    : `$${state.data.minBounty}+`;
   
-  const completionMessage = `🎉 *Setup Complete\\!*
-
-Your preferences have been saved:
-
-💰 *Bounty Range:* $${state.data.minBounty} \\- ${escapeMarkdownV2(maxText)}
-📂 *Categories:* ${escapeMarkdownV2(state.data.categories.map((cat: string) => mapInternalCategoryToUser(cat)).join(', '))}
-🎯 *Project Type:* ${escapeMarkdownV2(projectType === 'all' ? 'All' : projectType.charAt(0).toUpperCase() + projectType.slice(1))}
-
-You'll now receive notifications for new ${projectType === 'all' ? 'bounties and projects' : projectType + 's'} that match your preferences\\!
-
-Use these commands:
-• /preferences \\- View your settings
-• /pause \\- Pause notifications
-• /help \\- Show all commands`;
+  await ctx.reply(
+    `🎉 *Setup Complete\\!*\n\n` +
+    `*Your preferences:*\n` +
+    `💰 *Bounty Range:* ${escapeMarkdownV2(bountyText)}\n` +
+    `�� *Categories:* ${escapeMarkdownV2(categoriesText)}\n` +
+    `🎯 *Project Type:* ${escapeMarkdownV2(projectType.charAt(0).toUpperCase() + projectType.slice(1))}\n\n` +
+    `You'll now receive notifications for new bounties that match your preferences\\.\n\n` +
+    `Use /preferences to view your settings or /edit to modify them\\.`,
+    { 
+      parse_mode: 'MarkdownV2',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '📊 View Stats', callback_data: 'view_stats' }],
+          [{ text: '⚙️ Preferences', callback_data: 'view_preferences' }]
+        ]
+      }
+    }
+  );
   
-  await ctx.reply(completionMessage, { 
-    parse_mode: 'MarkdownV2'
-  });
-  
-  await ctx.answerCbQuery('Setup completed successfully!');
+  await ctx.answerCbQuery(`Setup completed!`);
 };
 
-// Reminder callback handlers
-const handleAddReminder = async (ctx: any, callbackData: string) => {
-  const userId = ctx.from?.id;
-  const listingId = parseInt(callbackData.replace('add_reminder_', ''));
+const handleBountyRangeSelection = async (ctx: any, state: any, callbackData: string) => {
+  const [_, minStr, maxStr] = callbackData.split('_');
+  const min = parseInt(minStr);
+  const max = maxStr === 'unlimited' ? undefined : parseInt(maxStr);
   
-  debug(`Add reminder request: userId=${userId}, listingId=${listingId}, callbackData=${callbackData}`);
+  state.data.minBounty = min;
+  state.data.maxBounty = max;
+  state.step = 'categories';
   
-  if (!userId || isNaN(listingId)) {
-    debug(`Invalid reminder request: userId=${userId}, listingId=${listingId}`);
-    await ctx.answerCbQuery('Invalid reminder request.');
-    return;
-  }
+  const rangeText = max ? `$${min}-$${max}` : `$${min}+`;
+  
+  await ctx.reply(
+    `✅ Bounty range set to: ${escapeMarkdownV2(rangeText)}\n\n` +
+    `*Step 2: Categories*\n` +
+    `What categories are you interested in?\n\n` +
+    `Select from the buttons below:`,
+    { 
+      parse_mode: 'MarkdownV2',
+      reply_markup: createCategoryKeyboard()
+    }
+  );
+  
+  await ctx.answerCbQuery(`Selected: ${rangeText}`);
+};
 
+const handleMinBountySelection = async (ctx: any, state: any, callbackData: string) => {
+  const min = parseInt(callbackData.replace('min_bounty_', ''));
+  
+  state.data.minBounty = min;
+  state.data.maxBounty = undefined;
+  state.step = 'categories';
+  
+  const rangeText = `$${min}+`;
+  
+  await ctx.reply(
+    `✅ Minimum bounty set to: ${escapeMarkdownV2(rangeText)}\n\n` +
+    `*Step 2: Categories*\n` +
+    `What categories are you interested in?\n\n` +
+    `Select from the buttons below:`,
+    { 
+      parse_mode: 'MarkdownV2',
+      reply_markup: createCategoryKeyboard()
+    }
+  );
+  
+  await ctx.answerCbQuery(`Selected: ${rangeText}`);
+};
+
+const handleBackToCategories = async (ctx: any, state: any) => {
+  state.step = 'categories';
+  
+  await ctx.reply(
+    `*Step 2: Categories*\n` +
+    `What categories are you interested in?\n\n` +
+    `Select from the buttons below:`,
+    { 
+      parse_mode: 'MarkdownV2',
+      reply_markup: createCategoryKeyboard()
+    }
+  );
+  
+  await ctx.answerCbQuery('Back to categories');
+};
+
+const handleBackToBountyRange = async (ctx: any, state: any) => {
+  state.step = 'bountyRange';
+  
+  await ctx.reply(
+    `*Step 1: Bounty Range*\n` +
+    `What's your preferred bounty range?\n\n` +
+    `Select from the buttons below:`,
+    { 
+      parse_mode: 'MarkdownV2',
+      reply_markup: createBountyRangeKeyboard()
+    }
+  );
+  
+  await ctx.answerCbQuery('Back to bounty range');
+};
+
+const handleBackToProjectType = async (ctx: any, state: any) => {
+  state.step = 'projectType';
+  
+  await ctx.reply(
+    `*Step 3: Project Type*\n` +
+    `What type of projects are you interested in?\n\n` +
+    `Select from the buttons below:`,
+    { 
+      parse_mode: 'MarkdownV2',
+      reply_markup: createProjectTypeKeyboard()
+    }
+  );
+  
+  await ctx.answerCbQuery('Back to project type');
+};
+
+// Reminder handling functions
+const handleAddReminder = async (ctx: any, callbackData: string) => {
   try {
+    const userId = ctx.from?.id;
+    if (!userId) return;
+
+    const listingId = parseInt(callbackData.replace('add_reminder_', ''));
+    const databaseService = DatabaseService.getInstance();
     const reminderService = ReminderService.getInstance();
-    const storageService = DatabaseService.getInstance();
-    
-    debug(`Looking up listing with ID: ${listingId}`);
-    
-    // Get listing details from database
-    const listing = await storageService.getListingById(listingId);
-    
+
+    // Get listing details
+    const listing = await databaseService.getListingById(listingId);
     if (!listing) {
-      debug(`Listing not found for ID: ${listingId}`);
-      await ctx.answerCbQuery('Listing not found.');
+      await ctx.answerCbQuery('❌ Listing not found');
       return;
     }
-    
-    debug(`Found listing: ${listing.title}`);
 
-    // Check if user already has an active reminder
-    const hasReminder = await reminderService.hasActiveReminder(userId, listingId);
-    
-    if (hasReminder) {
-      // Send message showing existing reminder with option to stop
-      const formattedDeadline = escapeMarkdownV2(new Date(listing.deadline).toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZoneName: 'short'
-      }));
-
-      const existingReminderMessage = `⏰ *Reminder Already Set*
-
-*${escapeMarkdownV2(listing.title)}*
-
-You already have an active reminder for this listing\\.
-
-📅 *Deadline:* ${formattedDeadline}
-
-You'll be notified as the deadline approaches\\.`;
-
-      const keyboard = {
-        inline_keyboard: [
-          [
-            {
-              text: '🔗 View Details',
-              url: `${process.env.SERVER_URL || 'https://nearn.io'}/${listing.sponsorSlug}/${listing.sequentialId}`
-            }
-          ],
-          [
-            {
-              text: '🛑 Stop Reminders',
-              callback_data: `stop_reminder_${listingId}`
-            }
-          ]
-        ]
-      };
-
-      await ctx.reply(existingReminderMessage, {
-        parse_mode: 'MarkdownV2',
-        reply_markup: keyboard
-      });
-      
-      await ctx.answerCbQuery('⏰ Reminder already active for this listing.');
+    // Check if user already has a reminder for this listing
+    const hasActiveReminder = await reminderService.hasActiveReminder(userId, listingId);
+    if (hasActiveReminder) {
+      await ctx.reply(
+        `⏰ *Reminder Already Set*\n\n` +
+        `*${escapeMarkdownV2(listing.title)}*\n\n` +
+        `You already have an active reminder for this listing\\.\n\n` +
+        `📅 *Deadline:* ${escapeMarkdownV2(new Date(listing.deadline).toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZoneName: 'short'
+        }))}\n\n` +
+        `You'll be notified as the deadline approaches\\.`,
+        { 
+          parse_mode: 'MarkdownV2',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔗 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders` }],
+              [{ text: '🛑 Stop Reminders', callback_data: `stop_reminder_${listingId}` }]
+            ]
+          }
+        }
+      );
+      await ctx.answerCbQuery('Reminder already set');
       return;
     }
 
     // Add reminder
-    const success = await reminderService.addReminder(
-      userId,
-      listingId,
-      listing.slug,
-      listing.title,
-      new Date(listing.deadline)
-    );
-
+    const success = await reminderService.addReminder(userId, listingId, listing.slug, listing.title, new Date(listing.deadline));
     if (success) {
-      // Send confirmation message with stop reminder button
-      const formattedDeadline = escapeMarkdownV2(new Date(listing.deadline).toLocaleString('en-US', {
+      const formattedDeadline = new Date(listing.deadline).toLocaleString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
         timeZoneName: 'short'
-      }));
-
-      const confirmationMessage = `✅ *Reminder Set "${escapeMarkdownV2(listing.title)}" Successfully\\!*
-
-📅 *Deadline:* ${formattedDeadline}`;
-
-      const keyboard = {
-        inline_keyboard: [
-          [
-            {
-              text: '🔗 View Details',
-              url: `${process.env.SERVER_URL || 'https://nearn.io'}/${listing.sponsorSlug}/${listing.sequentialId}`
-            }
-          ],
-          [
-            {
-              text: '🛑 Stop Reminders',
-              callback_data: `stop_reminder_${listingId}`
-            }
-          ]
-        ]
-      };
-
-      await ctx.reply(confirmationMessage, {
-        parse_mode: 'MarkdownV2',
-        reply_markup: keyboard
       });
-      
+
+      await ctx.reply(
+        `✅ *Reminder Set "${escapeMarkdownV2(listing.title)}" Successfully\\!*\n\n` +
+        `📅 *Deadline:* ${escapeMarkdownV2(formattedDeadline)}\n\n` +
+        `You'll be notified as the deadline approaches\\.`,
+        { 
+          parse_mode: 'MarkdownV2',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔗 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders` }],
+              [{ text: '🛑 Stop Reminders', callback_data: `stop_reminder_${listingId}` }]
+            ]
+          }
+        }
+      );
       await ctx.answerCbQuery('✅ Reminder set successfully!');
     } else {
-      await ctx.answerCbQuery('❌ Failed to set reminder. Please try again.');
+      await ctx.answerCbQuery('❌ Failed to set reminder');
     }
   } catch (error) {
     debug('Error adding reminder:', error);
-    await ctx.answerCbQuery('An error occurred while setting the reminder.');
+    await ctx.answerCbQuery('❌ Error setting reminder');
   }
 };
 
 const handleStopReminder = async (ctx: any, callbackData: string) => {
-  const userId = ctx.from?.id;
-  const listingId = parseInt(callbackData.replace('stop_reminder_', ''));
-  
-  if (!userId || isNaN(listingId)) {
-    await ctx.answerCbQuery('Invalid stop reminder request.');
-    return;
-  }
-
   try {
+    const userId = ctx.from?.id;
+    if (!userId) return;
+
+    const listingId = parseInt(callbackData.replace('stop_reminder_', ''));
+    const databaseService = DatabaseService.getInstance();
     const reminderService = ReminderService.getInstance();
-    
+
+    // Get listing details
+    const listing = await databaseService.getListingById(listingId);
+    if (!listing) {
+      await ctx.answerCbQuery('❌ Listing not found');
+      return;
+    }
+
     // Remove reminder
     const success = await reminderService.removeReminder(userId, listingId);
-
     if (success) {
-      // Send confirmation message
-      const confirmationMessage = `🛑 *Reminders Stopped*
-
-✅ You will no longer receive deadline reminders for this listing\\.
-
-To set a new reminder, click the "⏰ Remind Deadline" button on any listing notification\\.`;
-
-      await ctx.reply(confirmationMessage, {
-        parse_mode: 'MarkdownV2'
-      });
-      
-      await ctx.answerCbQuery('✅ Reminders stopped successfully!');
+      await ctx.reply(
+        `🛑 *Reminders Stopped*\n\n` +
+        `✅ You will no longer receive deadline reminders for this listing\\.\n\n` +
+        `To set a new reminder, click the "⏰ Remind Deadline" button on any listing notification\\.`,
+        { 
+          parse_mode: 'MarkdownV2',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔗 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders` }]
+            ]
+          }
+        }
+      );
+      await ctx.answerCbQuery('✅ Reminders stopped');
     } else {
-      await ctx.answerCbQuery('❌ Failed to stop reminders. Please try again.');
+      await ctx.answerCbQuery('❌ Failed to stop reminders');
     }
   } catch (error) {
     debug('Error stopping reminder:', error);
-    await ctx.answerCbQuery('An error occurred while stopping the reminder.');
+    await ctx.answerCbQuery('❌ Error stopping reminders');
   }
 };
 
- 
+// Export additional functions needed by setup command
+export const startSetup = async (ctx: Context) => {
+  const userId = ctx.from?.id;
+  if (!userId) {
+    await ctx.reply('❌ Unable to identify user. Please try again.');
+    return;
+  }
+
+  // Initialize setup state
+  const state = {
+    step: 'bountyRange' as const,
+    data: {} as Partial<UserPreferences>
+  };
+  setupStates.set(userId, state);
+
+  await ctx.reply(
+    `*Step 1: Bounty Range*\n` +
+    `What's your preferred bounty range?\n\n` +
+    `Select from the buttons below:`,
+    { 
+      parse_mode: 'MarkdownV2',
+      reply_markup: createBountyRangeKeyboard()
+    }
+  );
+};
+
+
+export const handleMessage = async (ctx: Context) => {
+  // Handle text messages if needed
+  // For now, just acknowledge the message
+  await ctx.reply('Please use the /setup command to configure your preferences.');
+};
+
+export { createBountyRangeKeyboard, createCategoryKeyboard, createProjectTypeKeyboard };
+
+// Import submission reminder service
+import { SubmissionReminderService } from '../services/submission-reminder';
+
+// Add submission reminder handlers
+const handleAddSubmissionReminder = async (ctx: any, callbackData: string) => {
+  try {
+    const userId = ctx.from?.id;
+    if (!userId) return;
+
+    const listingId = parseInt(callbackData.replace('add_submission_reminder_', ''));
+    const databaseService = DatabaseService.getInstance();
+    const submissionReminderService = SubmissionReminderService.getInstance();
+
+    // Get listing details
+    const listing = await databaseService.getListingById(listingId);
+    if (!listing) {
+      await ctx.answerCbQuery('❌ Listing not found');
+      return;
+    }
+
+    // Check if user already has a submission reminder for this listing
+    const hasActiveReminder = await submissionReminderService.hasActiveSubmissionReminder(userId, listingId);
+    if (hasActiveReminder) {
+      await ctx.reply(
+        `📝 *Submission Reminder Already Set*\n\n` +
+        `*${escapeMarkdownV2(listing.title)}*\n\n` +
+        `You already have an active submission reminder for this listing\\.\n\n` +
+        `You'll be notified when new submissions are created or approved\\.`,
+        { 
+          parse_mode: 'MarkdownV2',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '�� View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders` }],
+              [{ text: '🛑 Stop Submission Reminders', callback_data: `stop_submission_reminder_${listingId}` }]
+            ]
+          }
+        }
+      );
+      await ctx.answerCbQuery('Submission reminder already set');
+      return;
+    }
+
+    // Add submission reminder
+    const success = await submissionReminderService.addSubmissionReminder(
+      userId, 
+      listingId, 
+      listing.slug, 
+      listing.title,
+      listing.sponsorSlug,
+      listing.sequentialId
+    );
+    
+    if (success) {
+      await ctx.reply(
+        `✅ *Submission Reminder Set "${escapeMarkdownV2(listing.title)}" Successfully\\!*\n\n` +
+        `You'll be notified when:\n` +
+        `• New submissions are created\n` +
+        `• Submission status changes to approved\n\n` +
+        `🔗 [View Details](${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders)`,
+        { 
+          parse_mode: 'MarkdownV2',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🛑 Stop Submission Reminders', callback_data: `stop_submission_reminder_${listingId}` }]
+            ]
+          }
+        }
+      );
+      await ctx.answerCbQuery('✅ Submission reminder set successfully!');
+    } else {
+      await ctx.answerCbQuery('❌ Failed to set submission reminder');
+    }
+  } catch (error) {
+    debug('Error adding submission reminder:', error);
+    await ctx.answerCbQuery('❌ Error setting submission reminder');
+  }
+};
+
+const handleStopSubmissionReminder = async (ctx: any, callbackData: string) => {
+  try {
+    const userId = ctx.from?.id;
+    if (!userId) return;
+
+    const listingId = parseInt(callbackData.replace('stop_submission_reminder_', ''));
+    const submissionReminderService = SubmissionReminderService.getInstance();
+
+    // Remove submission reminder
+    const success = await submissionReminderService.removeSubmissionReminder(userId, listingId);
+    if (success) {
+      await ctx.reply(
+        `🛑 *Submission Reminders Stopped*\n\n` +
+        `✅ You will no longer receive submission reminders for this listing\\.\n\n` +
+        `To set a new submission reminder, click the "📝 Remind Submission" button on any listing notification\\.`,
+        { 
+          parse_mode: 'MarkdownV2',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔗 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders` }]
+            ]
+          }
+        }
+      );
+      await ctx.answerCbQuery('✅ Submission reminders stopped');
+    } else {
+      await ctx.answerCbQuery('❌ Failed to stop submission reminders');
+    }
+  } catch (error) {
+    debug('Error stopping submission reminder:', error);
+    await ctx.answerCbQuery('❌ Error stopping submission reminders');
+  }
+};

@@ -132,7 +132,7 @@ export class TokenPriceService {
   // Batch convert multiple listings
   async convertListingsToUSD(listings: any[]): Promise<any[]> {
     // Filter out 'Any' token since it's already in USD
-    const uniqueTokens = [...new Set(listings.map(l => l.token).filter(token => token !== 'Any'))];
+    const uniqueTokens = Array.from(new Set(listings.map(l => l.token).filter(token => token !== 'Any')));
     const pricePromises = uniqueTokens.map(token => this.getTokenPrice(token));
     const prices = await Promise.all(pricePromises);
     
