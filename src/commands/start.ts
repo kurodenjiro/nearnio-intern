@@ -1,7 +1,7 @@
 import { Context } from 'telegraf';
 import createDebug from 'debug';
 import { NotificationService } from '../services/notification';
-import { StorageService } from '../services/storage';
+import { DatabaseService } from '../services/database';
 import { escapeMarkdownV2 } from '../utils/markdown';
 
 const debug = createDebug('bot:start_command');
@@ -17,12 +17,12 @@ const start = () => async (ctx: Context) => {
     return;
   }
 
-  const storage = StorageService.getInstance();
+  const databaseService = DatabaseService.getInstance();
   const notificationService = NotificationService.getInstance();
 
   try {
     // Check if user already exists
-    const existingPreferences = await storage.getUserPreferences(userId);
+    const existingPreferences = await databaseService.getUserPreferences(userId);
     
     if (existingPreferences) {
       const message = `👋 *Welcome back\\!*

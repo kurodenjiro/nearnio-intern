@@ -1,6 +1,6 @@
 import { Context } from 'telegraf';
 import createDebug from 'debug';
-import { StorageService } from '../services/storage';
+import { DatabaseService } from '../services/database';
 import { UserPreferences } from '../types/superteam';
 import { startSetup, createBountyRangeKeyboard } from '../handlers/message-handler';
 
@@ -33,11 +33,11 @@ const setup = () => async (ctx: Context) => {
     return;
   }
 
-  const storage = StorageService.getInstance();
+  const databaseService = DatabaseService.getInstance();
 
   try {
     // Check if user already has preferences
-    const existingPreferences = await storage.getUserPreferences(userId);
+    const existingPreferences = await databaseService.getUserPreferences(userId);
     
     if (existingPreferences) {
       const message = `⚠️ *You already have preferences set up\\!*

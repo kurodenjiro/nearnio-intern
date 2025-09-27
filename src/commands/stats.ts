@@ -1,6 +1,6 @@
 import { Context } from 'telegraf';
 import createDebug from 'debug';
-import { StorageService } from '../services/storage';
+import { DatabaseService } from '../services/database';
 import { escapeMarkdownV2 } from '../utils/markdown';
 
 const debug = createDebug('bot:stats_command');
@@ -15,10 +15,10 @@ const stats = () => async (ctx: Context) => {
     return;
   }
 
-  const storage = StorageService.getInstance();
+  const databaseService = DatabaseService.getInstance();
 
   try {
-    const userPreferences = await storage.getUserPreferences(userId);
+    const userPreferences = await databaseService.getUserPreferences(userId);
     
     if (!userPreferences) {
       const message = `❌ *No preferences found!*
@@ -29,7 +29,8 @@ You haven't set up your preferences yet. Use /setup to configure your bounty not
       return;
     }
 
-    const totalUsers = await storage.getActiveUserCount();
+    const activeUsers = await databaseService.getAllActiveUsers();
+    const totalUsers = activeUsers.length;
     const status = userPreferences.isActive ? '✅ Active' : '⏸️ Paused';
     const lastUpdated = userPreferences.updatedAt.toLocaleDateString();
     const checkInterval = 5; // New system checks every 5 minutes

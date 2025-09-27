@@ -1,6 +1,6 @@
 import { Context } from 'telegraf';
 import createDebug from 'debug';
-import { StorageService } from '../services/storage';
+import { DatabaseService } from '../services/database';
 import { escapeMarkdownV2 } from '../utils/markdown';
 
 const debug = createDebug('bot:edit_command');
@@ -15,10 +15,10 @@ const edit = () => async (ctx: Context) => {
     return;
   }
 
-  const storage = StorageService.getInstance();
+  const databaseService = DatabaseService.getInstance();
 
   try {
-    const userPreferences = await storage.getUserPreferences(userId);
+    const userPreferences = await databaseService.getUserPreferences(userId);
     
     if (!userPreferences) {
       const message = `❌ *No preferences found\\!*

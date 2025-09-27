@@ -1,6 +1,6 @@
 import { Context } from 'telegraf';
 import createDebug from 'debug';
-import { StorageService } from '../services/storage';
+import { DatabaseService } from '../services/database';
 
 const debug = createDebug('bot:pause_command');
 
@@ -14,10 +14,10 @@ const pause = () => async (ctx: Context) => {
     return;
   }
 
-  const storage = StorageService.getInstance();
+  const databaseService = DatabaseService.getInstance();
 
   try {
-    const userPreferences = await storage.getUserPreferences(userId);
+    const userPreferences = await databaseService.getUserPreferences(userId);
     
     if (!userPreferences) {
       const message = `❌ *No preferences found!*
@@ -33,7 +33,7 @@ You haven't set up your preferences yet. Use /setup to configure your bounty not
       return;
     }
 
-    await storage.updateUserPreferences(userId, { isActive: false });
+    await databaseService.updateUserPreferences(userId, { isActive: false });
 
     const message = `⏸️ *Notifications Paused*
 
