@@ -178,29 +178,59 @@ export class ChatAIService {
   }
 
   private async generateAIResponse(session: ChatSession, message: string): Promise<string> {
-    // This is a placeholder implementation
-    // In a real scenario, this would call an AI service like OpenAI, Claude, etc.
-    
-    const lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.includes('description') || lowerMessage.includes('what is') || lowerMessage.includes('about')) {
-      return `This listing is about the project details. You can find more information in the listing description.`;
+    try {
+      // Get listing details from the session
+      const listing = await this.databaseService.getListingById(session.listingId);
+      if (!listing) {
+        return `I'm sorry, I couldn't find the listing details. Please try again.`;
+      }
+
+      // Create a context-rich prompt for the AI
+      const systemPrompt = `You are a helpful AI assistant for the Nearn bounty platform. You help users understand listings and answer questions about them.
+
+Listing Information:
+- Title: ${listing.title}
+- Type: ${listing.type}
+- Reward: ${listing.rewardAmount} ${listing.token}
+- Deadline: ${listing.deadline}
+- Status: ${listing.status}
+- Sponsor: ${listing.sponsorSlug}
+- Description: ${listing.description || 'No description available'}
+
+Please provide helpful, accurate responses about this listing. If you don't have specific information, suggest where the user can find it.`;
+
+      // Use AI SDK generateText to generate response
+      const result = await generateText({
+        model: openai('gpt-3.5-turbo'),
+        system: systemPrompt,
+        prompt: message,
+      });
+
+      return result.text;
+    } catch (error) {
+      debug(`Error generating AI response:`, error);
+      // Fallback to simple responses if AI fails
+      const lowerMessage = message.toLowerCase();
+      
+      if (lowerMessage.includes('description') || lowerMessage.includes('what is') || lowerMessage.includes('about')) {
+        return `This listing is about the project details. You can find more information in the listing description.`;
+      }
+      
+      if (lowerMessage.includes('deadline') || lowerMessage.includes('when')) {
+        return `The deadline for this listing is available in the listing details. Check the deadline information.`;
+      }
+      
+      if (lowerMessage.includes('reward') || lowerMessage.includes('payment') || lowerMessage.includes('money')) {
+        return `The reward amount and token information is available in the listing details.`;
+      }
+      
+      if (lowerMessage.includes('how') || lowerMessage.includes('apply') || lowerMessage.includes('submit')) {
+        return `To apply for this listing, you can view the full details and follow the application process described there.`;
+      }
+      
+      // Default fallback response
+      return `I understand you're asking about this listing. For specific details, please check the listing description and requirements. You can also ask me about the description, deadline, reward, or how to apply.`;
     }
-    
-    if (lowerMessage.includes('deadline') || lowerMessage.includes('when')) {
-      return `The deadline for this listing is available in the listing details. Check the deadline information.`;
-    }
-    
-    if (lowerMessage.includes('reward') || lowerMessage.includes('payment') || lowerMessage.includes('money')) {
-      return `The reward amount and token information is available in the listing details.`;
-    }
-    
-    if (lowerMessage.includes('how') || lowerMessage.includes('apply') || lowerMessage.includes('submit')) {
-      return `To apply for this listing, you can view the full details and follow the application process described there.`;
-    }
-    
-    // Default response
-    return `I understand you're asking about this listing. For specific details, please check the listing description and requirements. You can also ask me about the description, deadline, reward, or how to apply.`;
   }
 
   // Clean up inactive sessions (call this periodically)
