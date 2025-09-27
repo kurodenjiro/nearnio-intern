@@ -1,5 +1,6 @@
 import createDebug from 'debug';
 import { DatabaseService } from './database';
+import { escapeMarkdownV2 } from '../utils/markdown';
 
 const debug = createDebug('bot:chat-ai');
 
@@ -131,7 +132,7 @@ export class ChatAIService {
       // In a real implementation, this would call an AI service
       const response = await this.generateAIResponse(session, message);
       
-      return { success: true, response };
+      return { success: true, response: escapeMarkdownV2(response) };
     } catch (error) {
       debug(`Error processing message:`, error);
       return { success: false, response: 'Sorry, I encountered an error processing your message.' };
