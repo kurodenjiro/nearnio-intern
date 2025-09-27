@@ -8,6 +8,7 @@
   "dependencies": {
     "@prisma/client": "^5.7.1",
     "@vercel/node": "^5.1.16",
+    "ai": "^5.0.56",
     "dotenv-cli": "^8.0.0",
     "telegraf": "^4.16.3"
   },
