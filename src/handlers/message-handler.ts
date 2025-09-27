@@ -465,7 +465,7 @@ const handleAddReminder = async (ctx: any, callbackData: string) => {
           parse_mode: 'MarkdownV2',
           reply_markup: {
             inline_keyboard: [
-              [{ text: '🔗 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders` }],
+              [{ text: '🔗 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/${listing.sponsorSlug}/${listing.sequentialId}` }],
               [{ text: '🛑 Stop Reminders', callback_data: `stop_reminder_${listingId}` }]
             ]
           }
@@ -495,7 +495,7 @@ const handleAddReminder = async (ctx: any, callbackData: string) => {
           parse_mode: 'MarkdownV2',
           reply_markup: {
             inline_keyboard: [
-              [{ text: '🔗 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders` }],
+              [{ text: '🔗 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/${listing.sponsorSlug}/${listing.sequentialId}` }],
               [{ text: '🛑 Stop Reminders', callback_data: `stop_reminder_${listingId}` }]
             ]
           }
@@ -538,7 +538,7 @@ const handleStopReminder = async (ctx: any, callbackData: string) => {
           parse_mode: 'MarkdownV2',
           reply_markup: {
             inline_keyboard: [
-              [{ text: '🔗 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders` }]
+              [{ text: '🔗 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/${listing.sponsorSlug}/${listing.sequentialId}` }]
             ]
           }
         }
@@ -618,7 +618,7 @@ const handleAddSubmissionReminder = async (ctx: any, callbackData: string) => {
           parse_mode: 'MarkdownV2',
           reply_markup: {
             inline_keyboard: [
-              [{ text: '📝 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders` }],
+              [{ text: '📝 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/${listing.sponsorSlug}/${listing.sequentialId}` }],
               [{ text: '🛑 Stop Submission Reminders', callback_data: `stop_submission_reminder_${listingId}` }]
             ]
           }
@@ -644,7 +644,7 @@ const handleAddSubmissionReminder = async (ctx: any, callbackData: string) => {
         `You'll be notified when:\n` +
         `• New submissions are created\n` +
         `• Submission status changes to approved\n\n` +
-        `🔗 [View Details](${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders)`,
+        `🔗 [View Details](${process.env.SERVER_URL || 'https://nearn.io'}/${listing.sponsorSlug}/${listing.sequentialId})`,
         { 
           parse_mode: 'MarkdownV2',
           reply_markup: {
@@ -683,7 +683,6 @@ const handleStopSubmissionReminder = async (ctx: any, callbackData: string) => {
           parse_mode: 'MarkdownV2',
           reply_markup: {
             inline_keyboard: [
-              [{ text: '🔗 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders` }]
             ]
           }
         }

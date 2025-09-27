@@ -57,6 +57,7 @@
     "test-submission-reminder-button": "ts-node scripts/test-submission-reminder-button.ts",
     "test-back-button-navigation": "ts-node scripts/test-back-button-navigation.ts",
     "test-step-one-back-button": "ts-node scripts/test-step-one-back-button.ts",
-    "test-view-buttons": "ts-node scripts/test-view-buttons.ts"
+    "test-view-buttons": "ts-node scripts/test-view-buttons.ts",
+    "test-submission-url-fix": "ts-node scripts/test-submission-url-fix.ts"
   }
 }
