@@ -42,7 +42,7 @@ export class ChatAIService {
     return ChatAIService.instance;
   }
 
-  async startChatSession(userId: number, listingId: number): Promise<{ success: boolean; message: string; listingDetails?: ListingDetails }> {
+  async startChatSession(userId: number, listingId: number): Promise<{ success: boolean; message: string; listingDetails?: ListingDetails | null }> {
     try {
       debug(`Starting chat session for user ${userId}, listing ${listingId}`);
 
