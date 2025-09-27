@@ -109,12 +109,6 @@ const createCategoryKeyboard = (): InlineKeyboardMarkup => {
 const createBountyRangeKeyboard = (): InlineKeyboardMarkup => {
   const keyboard = [];
   
-  // Add section header
-  keyboard.push([{
-    text: '💰 Select Bounty Range',
-    callback_data: 'bounty_header'
-  }]);
-  
   // Add bounty range options in rows of 2
   for (let i = 0; i < BOUNTY_RANGES.length; i += 2) {
     const row = [];
@@ -131,12 +125,6 @@ const createBountyRangeKeyboard = (): InlineKeyboardMarkup => {
     }
     keyboard.push(row);
   }
-  
-  // Add separator
-  keyboard.push([{
-    text: '━━━━━━━━━━━━━━━━━━━━',
-    callback_data: 'bounty_separator'
-  }]);
   
   // Add minimum bounty options in rows of 2
   for (let i = 0; i < MIN_BOUNTY_RANGES.length; i += 2) {
@@ -318,7 +306,7 @@ const handleProjectTypeSelection = async (ctx: any, state: any, callbackData: st
     `🎉 *Setup Complete\\!*\n\n` +
     `*Your preferences:*\n` +
     `💰 *Bounty Range:* ${escapeMarkdownV2(bountyText)}\n` +
-    `�� *Categories:* ${escapeMarkdownV2(categoriesText)}\n` +
+    `🔖 *Categories:* ${escapeMarkdownV2(categoriesText)}\n` +
     `🎯 *Project Type:* ${escapeMarkdownV2(projectType.charAt(0).toUpperCase() + projectType.slice(1))}\n\n` +
     `You'll now receive notifications for new bounties that match your preferences\\.\n\n` +
     `Use /preferences to view your settings or /edit to modify them\\.`,
@@ -624,7 +612,7 @@ const handleAddSubmissionReminder = async (ctx: any, callbackData: string) => {
           parse_mode: 'MarkdownV2',
           reply_markup: {
             inline_keyboard: [
-              [{ text: '�� View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders` }],
+              [{ text: '📝 View Details', url: `${process.env.SERVER_URL || 'https://nearn.io'}/submission-reminders` }],
               [{ text: '🛑 Stop Submission Reminders', callback_data: `stop_submission_reminder_${listingId}` }]
             ]
           }
