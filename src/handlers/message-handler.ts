@@ -144,16 +144,9 @@ const createBountyRangeKeyboard = (): InlineKeyboardMarkup => {
     keyboard.push(row);
   }
   
-  // Add back button
-  keyboard.push([{
-    text: '⬅️ Back to Setup',
-    callback_data: 'back_bounty_range'
-  }]);
-  
   return { inline_keyboard: keyboard };
 };
 
-// Helper function to create project type selection keyboard
 // Helper function to create project type selection keyboard
 const createProjectTypeKeyboard = (): InlineKeyboardMarkup => {
   const keyboard = [];
@@ -234,8 +227,6 @@ export const handleCallbackQuery = async (ctx: any) => {
       await handleProjectTypeSelection(ctx, state, callbackData);
     } else if (callbackData === 'back_categories') {
       await handleBackToCategories(ctx, state);
-    } else if (callbackData === 'back_bounty_range') {
-      await handleBackToBountyRange(ctx, state);
     } else if (callbackData === 'back_project_type') {
       await handleBackToProjectType(ctx, state);
     } else {
