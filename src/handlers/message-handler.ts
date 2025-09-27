@@ -16,7 +16,7 @@ const mapUserCategoryToInternal = (userCategory: string): string => {
     'Content': 'CONTENT',
     'Growth': 'GROWTH',
     'Community': 'COMMUNITY',
-    'Sponsorship': 'SPONSORSHIP',
+    
     'Other': 'OTHER',
     'All': 'All'
   };
@@ -32,7 +32,7 @@ const mapInternalCategoryToUser = (internalCategory: string): string => {
     'CONTENT': 'Content',
     'GROWTH': 'Growth',
     'COMMUNITY': 'Community',
-    'SPONSORSHIP': 'Sponsorship',
+    
     'OTHER': 'Other',
     'All': 'All'
   };
@@ -48,7 +48,7 @@ const setupStates = new Map<number, {
 
 // Available categories and project types
 const AVAILABLE_CATEGORIES = [
-  'All', 'Content', 'Design', 'Development', 'Sponsorship', 'Other'
+  'All', 'Content', 'Design', 'Development', 'Other'
 ];
 
 const PROJECT_TYPES = ['bounty', 'project', 'sponsorship', 'all'];
@@ -86,10 +86,9 @@ const createCategoryKeyboard = (): InlineKeyboardMarkup => {
     { text: 'Design', callback_data: 'category_Design' }
   ]);
   
-  // Third row: Development and Sponsorship
+  // Third row: Development
   keyboard.push([
-    { text: 'Development', callback_data: 'category_Development' },
-    { text: 'Sponsorship', callback_data: 'category_Sponsorship' }
+    { text: 'Development', callback_data: 'category_Development' }
   ]);
   
   // Fourth row: Other
@@ -110,25 +109,55 @@ const createCategoryKeyboard = (): InlineKeyboardMarkup => {
 const createBountyRangeKeyboard = (): InlineKeyboardMarkup => {
   const keyboard = [];
   
-  // Add bounty range options
-  BOUNTY_RANGES.forEach(range => {
-    keyboard.push([{
-      text: range.text,
-      callback_data: `bounty_${range.min}_${range.max || 'unlimited'}`
-    }]);
-  });
+  // Add section header
+  keyboard.push([{
+    text: '💰 Select Bounty Range',
+    callback_data: 'bounty_header'
+  }]);
   
-  // Add minimum bounty options
-  MIN_BOUNTY_RANGES.forEach(range => {
-    keyboard.push([{
-      text: range.text,
-      callback_data: `min_bounty_${range.min}`
-    }]);
-  });
+  // Add bounty range options in rows of 2
+  for (let i = 0; i < BOUNTY_RANGES.length; i += 2) {
+    const row = [];
+    row.push({
+      text: `💵 ${BOUNTY_RANGES[i].text}`,
+      callback_data: `bounty_${BOUNTY_RANGES[i].min}_${BOUNTY_RANGES[i].max || 'unlimited'}`
+    });
+    
+    if (i + 1 < BOUNTY_RANGES.length) {
+      row.push({
+        text: `💵 ${BOUNTY_RANGES[i + 1].text}`,
+        callback_data: `bounty_${BOUNTY_RANGES[i + 1].min}_${BOUNTY_RANGES[i + 1].max || 'unlimited'}`
+      });
+    }
+    keyboard.push(row);
+  }
+  
+  // Add separator
+  keyboard.push([{
+    text: '━━━━━━━━━━━━━━━━━━━━',
+    callback_data: 'bounty_separator'
+  }]);
+  
+  // Add minimum bounty options in rows of 2
+  for (let i = 0; i < MIN_BOUNTY_RANGES.length; i += 2) {
+    const row = [];
+    row.push({
+      text: `🎯 ${MIN_BOUNTY_RANGES[i].text}`,
+      callback_data: `min_bounty_${MIN_BOUNTY_RANGES[i].min}`
+    });
+    
+    if (i + 1 < MIN_BOUNTY_RANGES.length) {
+      row.push({
+        text: `🎯 ${MIN_BOUNTY_RANGES[i + 1].text}`,
+        callback_data: `min_bounty_${MIN_BOUNTY_RANGES[i + 1].min}`
+      });
+    }
+    keyboard.push(row);
+  }
   
   // Add back button
   keyboard.push([{
-    text: '⬅️ Back',
+    text: '⬅️ Back to Setup',
     callback_data: 'back_bounty_range'
   }]);
   

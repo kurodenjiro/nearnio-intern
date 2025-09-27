@@ -47,6 +47,9 @@
     "test-prisma-direct": "ts-node scripts/test-prisma-direct.ts",
     "test-sponsorship": "ts-node scripts/test-sponsorship.ts",
     "test-submission-reminders": "ts-node scripts/test-submission-reminders.ts",
-    "test-buttons": "ts-node scripts/test-buttons.ts"
+    "test-buttons": "ts-node scripts/test-buttons.ts",
+    "test-categories-removal": "ts-node scripts/test-categories-removal.ts",
+    "test-bounty-keyboard": "ts-node scripts/test-bounty-keyboard.ts",
+    "test-back-navigation": "ts-node scripts/test-back-navigation.ts"
   }
 }
