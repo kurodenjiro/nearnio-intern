@@ -5,6 +5,7 @@ import { UserPreferences } from '../types/superteam';
 import { escapeMarkdownV2 } from '../utils/markdown';
 import { ReminderService } from '../services/reminder';
 import { SubmissionReminderService } from '../services/submission-reminder';
+import { ChatAIService } from '../services/chat-ai';
 import { stats } from '../commands/stats';
 import { preferences } from '../commands/preferences';
 import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
@@ -208,6 +209,10 @@ export const handleCallbackQuery = async (ctx: any) => {
       return;
     }
 
+    if (callbackData.startsWith('chat_ai_')) {
+      await handleChatAI(ctx, callbackData);
+      return;
+    }
     // Get or create setup state for this user
     let state = setupStates.get(userId);
     if (!state) {
@@ -694,5 +699,35 @@ const handleStopSubmissionReminder = async (ctx: any, callbackData: string) => {
   } catch (error) {
     debug('Error stopping submission reminder:', error);
     await ctx.answerCbQuery('❌ Error stopping submission reminders');
+  }
+};
+
+const handleChatAI = async (ctx: any, callbackData: string) => {
+  try {
+    const userId = ctx.from?.id;
+    if (!userId) return;
+
+    const listingId = parseInt(callbackData.replace('chat_ai_', ''));
+    const chatAIService = ChatAIService.getInstance();
+
+    // Start chat session
+    const result = await chatAIService.startChatSession(userId, listingId);
+    
+    if (result.success) {
+      await ctx.reply(
+        escapeMarkdownV2(result.message),
+        { parse_mode: 'MarkdownV2' }
+      );
+      await ctx.answerCbQuery('✅ Chat AI session started');
+    } else {
+      await ctx.reply(
+        `❌ ${escapeMarkdownV2(result.message)}`,
+        { parse_mode: 'MarkdownV2' }
+      );
+      await ctx.answerCbQuery('❌ Failed to start chat session');
+    }
+  } catch (error) {
+    debug('Error starting chat AI:', error);
+    await ctx.answerCbQuery('❌ Error starting chat session');
   }
 };

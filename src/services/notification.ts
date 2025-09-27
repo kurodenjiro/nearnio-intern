@@ -115,6 +115,12 @@ export class NotificationService {
         ]] : []),
         [
           {
+            text: '🤖 Chat AI',
+            callback_data: `chat_ai_${listing.id || listing.sequentialId}`
+          }
+        ],
+        [
+          {
             text: reminderButtonText,
             callback_data: reminderCallbackData
           },

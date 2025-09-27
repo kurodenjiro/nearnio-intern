@@ -12,6 +12,8 @@ import { resume } from './commands/resume';
 import { stop } from './commands/stop';
 import { stats } from './commands/stats';
 import { edit } from './commands/edit';
+import { agent } from './commands/agent';
+import { stopchat } from './commands/stopchat';
 
 // Import handlers
 import { handleMessage, handleCallbackQuery } from './handlers/message-handler';
@@ -31,6 +33,8 @@ bot.command('resume', resume());
 bot.command('stop', stop());
 bot.command('stats', stats());
 bot.command('edit', edit());
+bot.command('agent', agent());
+bot.command('stopchat', stopchat());
 
 // Handle unknown commands
 bot.command('about', async (ctx) => {

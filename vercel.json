@@ -20,6 +20,10 @@
     {
       "path": "/api/cron/reminders",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/submission-reminders",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
