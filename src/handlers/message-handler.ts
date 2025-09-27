@@ -5,6 +5,8 @@ import { UserPreferences } from '../types/superteam';
 import { escapeMarkdownV2 } from '../utils/markdown';
 import { ReminderService } from '../services/reminder';
 import { SubmissionReminderService } from '../services/submission-reminder';
+import { stats } from '../commands/stats';
+import { preferences } from '../commands/preferences';
 import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 
 const debug = createDebug('bot:message-handler');
@@ -229,6 +231,10 @@ export const handleCallbackQuery = async (ctx: any) => {
       await handleBackToCategories(ctx, state);
     } else if (callbackData === 'back_project_type') {
       await handleBackToProjectType(ctx, state);
+    } else if (callbackData === 'view_stats') {
+      await stats()(ctx);
+    } else if (callbackData === 'view_preferences') {
+      await preferences()(ctx);
     } else {
       await ctx.answerCbQuery('Unknown action. Please try again.');
     }
