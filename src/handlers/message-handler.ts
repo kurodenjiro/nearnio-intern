@@ -238,6 +238,14 @@ export const handleCallbackQuery = async (ctx: any) => {
       await handleBackToBountyRange(ctx, state);
     } else if (callbackData === 'back_project_type') {
       await handleBackToProjectType(ctx, state);
+    } else if (callbackData === 'view_stats') {
+      await handleViewStats(ctx);
+    } else if (callbackData === 'view_preferences') {
+      await handleViewPreferences(ctx);
+    } else if (callbackData === 'edit_preferences') {
+      await handleEditPreferences(ctx);
+    } else if (callbackData === 'restart_setup') {
+      await handleRestartSetup(ctx);
     } else {
       await ctx.answerCbQuery('Unknown action. Please try again.');
     }
@@ -268,16 +276,16 @@ const handleCategorySelection = async (ctx: any, state: any, callbackData: strin
   }
   
   // Automatically proceed to next step after category selection
-  state.step = 'projectType';
+  state.step = 'categories';
   
   await ctx.editMessageText(
     `✅ Categories set to: ${escapeMarkdownV2(state.data.categories.map((cat: string) => mapInternalCategoryToUser(cat)).join(', '))}\n\n` +
-    `*Step 3: Project Type*\n` +
-    `What type of projects are you interested in?\n\n` +
+    `*Step 2: Categories*\n` +
+    `What categories are you interested in?\n\n` +
     `Select from the buttons below:`,
     { 
       parse_mode: 'MarkdownV2',
-      reply_markup: createProjectTypeKeyboard()
+      reply_markup: createCategoryKeyboard()
     }
   );
   
@@ -313,7 +321,7 @@ const handleProjectTypeSelection = async (ctx: any, state: any, callbackData: st
     ? `$${state.data.minBounty}-$${state.data.maxBounty}`
     : `$${state.data.minBounty}+`;
   
-  await ctx.reply(
+  await ctx.editMessageText(
     `🎉 *Setup Complete\\!*\n\n` +
     `*Your preferences:*\n` +
     `💰 *Bounty Range:* ${escapeMarkdownV2(bountyText)}\n` +
@@ -342,7 +350,7 @@ const handleBountyRangeSelection = async (ctx: any, state: any, callbackData: st
   
   state.data.minBounty = min;
   state.data.maxBounty = max;
-  state.step = 'categories';
+  state.step = 'bountyRange';
   
   const rangeText = max ? `$${min}-$${max}` : `$${min}+`;
   
@@ -365,7 +373,7 @@ const handleMinBountySelection = async (ctx: any, state: any, callbackData: stri
   
   state.data.minBounty = min;
   state.data.maxBounty = undefined;
-  state.step = 'categories';
+  state.step = 'bountyRange';
   
   const rangeText = `$${min}+`;
   
@@ -384,7 +392,7 @@ const handleMinBountySelection = async (ctx: any, state: any, callbackData: stri
 };
 
 const handleBackToCategories = async (ctx: any, state: any) => {
-  state.step = 'categories';
+  state.step = 'bountyRange';
   
   await ctx.editMessageText(
     `*Step 2: Categories*\n` +
@@ -416,19 +424,19 @@ const handleBackToBountyRange = async (ctx: any, state: any) => {
 };
 
 const handleBackToProjectType = async (ctx: any, state: any) => {
-  state.step = 'projectType';
+  state.step = 'categories';
   
-  await ctx.reply(
-    `*Step 3: Project Type*\n` +
-    `What type of projects are you interested in?\n\n` +
+  await ctx.editMessageText(
+    `*Step 2: Categories*\n` +
+    `What categories are you interested in?\n\n` +
     `Select from the buttons below:`,
     { 
       parse_mode: 'MarkdownV2',
-      reply_markup: createProjectTypeKeyboard()
+      reply_markup: createCategoryKeyboard()
     }
   );
   
-  await ctx.answerCbQuery('Back to project type');
+  await ctx.answerCbQuery('Back to categories');
 };
 
 // Reminder handling functions
@@ -451,7 +459,7 @@ const handleAddReminder = async (ctx: any, callbackData: string) => {
     // Check if user already has a reminder for this listing
     const hasActiveReminder = await reminderService.hasActiveReminder(userId, listingId);
     if (hasActiveReminder) {
-      await ctx.reply(
+      await ctx.editMessageText(
         `⏰ *Reminder Already Set*\n\n` +
         `*${escapeMarkdownV2(listing.title)}*\n\n` +
         `You already have an active reminder for this listing\\.\n\n` +
@@ -490,7 +498,7 @@ const handleAddReminder = async (ctx: any, callbackData: string) => {
         timeZoneName: 'short'
       });
 
-      await ctx.reply(
+      await ctx.editMessageText(
         `✅ *Reminder Set "${escapeMarkdownV2(listing.title)}" Successfully\\!*\n\n` +
         `📅 *Deadline:* ${escapeMarkdownV2(formattedDeadline)}\n\n` +
         `You'll be notified as the deadline approaches\\.`,
@@ -533,7 +541,7 @@ const handleStopReminder = async (ctx: any, callbackData: string) => {
     // Remove reminder
     const success = await reminderService.removeReminder(userId, listingId);
     if (success) {
-      await ctx.reply(
+      await ctx.editMessageText(
         `🛑 *Reminders Stopped*\n\n` +
         `✅ You will no longer receive deadline reminders for this listing\\.\n\n` +
         `To set a new reminder, click the "⏰ Remind Deadline" button on any listing notification\\.`,
@@ -560,7 +568,7 @@ const handleStopReminder = async (ctx: any, callbackData: string) => {
 export const startSetup = async (ctx: Context) => {
   const userId = ctx.from?.id;
   if (!userId) {
-    await ctx.reply('❌ Unable to identify user. Please try again.');
+    await ctx.editMessageText('❌ Unable to identify user. Please try again.');
     return;
   }
 
@@ -571,7 +579,7 @@ export const startSetup = async (ctx: Context) => {
   };
   setupStates.set(userId, state);
 
-  await ctx.reply(
+  await ctx.editMessageText(
     `*Step 1: Bounty Range*\n` +
     `What's your preferred bounty range?\n\n` +
     `Select from the buttons below:`,
@@ -586,7 +594,7 @@ export const startSetup = async (ctx: Context) => {
 export const handleMessage = async (ctx: Context) => {
   // Handle text messages if needed
   // For now, just acknowledge the message
-  await ctx.reply('Please use the /setup command to configure your preferences.');
+  await ctx.editMessageText('Please use the /setup command to configure your preferences.');
 };
 
 export { createBountyRangeKeyboard, createCategoryKeyboard, createProjectTypeKeyboard };
@@ -612,7 +620,7 @@ const handleAddSubmissionReminder = async (ctx: any, callbackData: string) => {
     // Check if user already has a submission reminder for this listing
     const hasActiveReminder = await submissionReminderService.hasActiveSubmissionReminder(userId, listingId);
     if (hasActiveReminder) {
-      await ctx.reply(
+      await ctx.editMessageText(
         `📝 *Submission Reminder Already Set*\n\n` +
         `*${escapeMarkdownV2(listing.title)}*\n\n` +
         `You already have an active submission reminder for this listing\\.\n\n` +
@@ -642,7 +650,7 @@ const handleAddSubmissionReminder = async (ctx: any, callbackData: string) => {
     );
     
     if (success) {
-      await ctx.reply(
+      await ctx.editMessageText(
         `✅ *Submission Reminder Set "${escapeMarkdownV2(listing.title)}" Successfully\\!*\n\n` +
         `You'll be notified when:\n` +
         `• New submissions are created\n` +
@@ -678,7 +686,7 @@ const handleStopSubmissionReminder = async (ctx: any, callbackData: string) => {
     // Remove submission reminder
     const success = await submissionReminderService.removeSubmissionReminder(userId, listingId);
     if (success) {
-      await ctx.reply(
+      await ctx.editMessageText(
         `🛑 *Submission Reminders Stopped*\n\n` +
         `✅ You will no longer receive submission reminders for this listing\\.\n\n` +
         `To set a new submission reminder, click the "📝 Remind Submission" button on any listing notification\\.`,
@@ -698,5 +706,110 @@ const handleStopSubmissionReminder = async (ctx: any, callbackData: string) => {
   } catch (error) {
     debug('Error stopping submission reminder:', error);
     await ctx.answerCbQuery('❌ Error stopping submission reminders');
+  }
+};
+
+// View stats handler
+const handleViewStats = async (ctx: any) => {
+  try {
+    const userId = ctx.from?.id;
+    if (!userId) return;
+
+    const databaseService = DatabaseService.getInstance();
+    const activeUsers = await databaseService.getAllActiveUsers();
+    const totalUsers = activeUsers.length;
+
+    const message = `📊 *Bot Statistics*
+
+👥 *Total Active Users:* ${totalUsers}
+🔔 *Notifications Sent:* Active
+⏰ *Reminders Active:* Active
+📝 *Submission Reminders:* Active
+
+*Last Updated:* ${new Date().toLocaleString()}`;
+
+    await ctx.reply(message, { parse_mode: 'MarkdownV2' });
+    await ctx.answerCbQuery('📊 Stats displayed');
+  } catch (error) {
+    debug('Error showing stats:', error);
+    await ctx.answerCbQuery('❌ Error loading stats');
+  }
+};
+
+// View preferences handler
+const handleViewPreferences = async (ctx: any) => {
+  try {
+    const userId = ctx.from?.id;
+    if (!userId) return;
+
+    const databaseService = DatabaseService.getInstance();
+    const preferences = await databaseService.getUserPreferences(userId);
+
+    if (!preferences) {
+      await ctx.reply('❌ No preferences found. Use /setup to configure your preferences.');
+      await ctx.answerCbQuery('❌ No preferences found');
+      return;
+    }
+
+    const categories = preferences.categories?.join(', ') || 'All';
+    const projectType = preferences.projectType || 'all';
+    const minBounty = preferences.minBounty || 0;
+    const maxBounty = preferences.maxBounty ? `$${preferences.maxBounty}` : 'unlimited';
+    const bountyRange = `$${minBounty} - ${maxBounty}`;
+
+    const message = `⚙️ *Your Preferences*
+
+📂 *Categories:* ${escapeMarkdownV2(categories)}
+🎯 *Project Type:* ${escapeMarkdownV2(projectType)}
+💰 *Bounty Range:* ${escapeMarkdownV2(bountyRange)}
+🔔 *Status:* ${preferences.isActive ? 'Active' : 'Inactive'}
+
+*Last Updated:* ${preferences.updatedAt?.toLocaleString() || 'Unknown'}`;
+
+    await ctx.reply(message, { 
+      parse_mode: 'MarkdownV2',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '✏️ Edit Preferences', callback_data: 'edit_preferences' }],
+          [{ text: '🔄 Restart Setup', callback_data: 'restart_setup' }]
+        ]
+      }
+    });
+    await ctx.answerCbQuery('⚙️ Preferences displayed');
+  } catch (error) {
+    debug('Error showing preferences:', error);
+    await ctx.answerCbQuery('❌ Error loading preferences');
+  }
+};
+
+// Edit preferences handler
+const handleEditPreferences = async (ctx: any) => {
+  try {
+    const userId = ctx.from?.id;
+    if (!userId) return;
+
+    await ctx.reply('✏️ *Edit Preferences*\n\nUse /edit command to modify your preferences, or /setup to start fresh.', { 
+      parse_mode: 'MarkdownV2' 
+    });
+    await ctx.answerCbQuery('✏️ Use /edit command');
+  } catch (error) {
+    debug('Error in edit preferences:', error);
+    await ctx.answerCbQuery('❌ Error');
+  }
+};
+
+// Restart setup handler
+const handleRestartSetup = async (ctx: any) => {
+  try {
+    const userId = ctx.from?.id;
+    if (!userId) return;
+
+    await ctx.reply('🔄 *Restart Setup*\n\nUse /setup command to restart the setup process.', { 
+      parse_mode: 'MarkdownV2' 
+    });
+    await ctx.answerCbQuery('🔄 Use /setup command');
+  } catch (error) {
+    debug('Error in restart setup:', error);
+    await ctx.answerCbQuery('❌ Error');
   }
 };
