@@ -10,6 +10,14 @@
     "@ai-sdk/provider" "2.0.0"
     "@ai-sdk/provider-utils" "3.0.10"
 
+"@ai-sdk/openai@^2.0.38":
+  version "2.0.38"
+  resolved "https://registry.npmjs.org/@ai-sdk/openai/-/openai-2.0.38.tgz"
+  integrity sha512-aPK5jSz5/UkbYnh59/Yy5ic3JsOrz7Gt6TJdB8ggYDYEUHJ9FHEKoRKz8DEHh3Zaf3yngxZLkdP4JSbroK3jsQ==
+  dependencies:
+    "@ai-sdk/provider" "2.0.0"
+    "@ai-sdk/provider-utils" "3.0.10"
+
 "@ai-sdk/provider-utils@3.0.10":
   version "3.0.10"
   resolved "https://registry.npmjs.org/@ai-sdk/provider-utils/-/provider-utils-3.0.10.tgz"

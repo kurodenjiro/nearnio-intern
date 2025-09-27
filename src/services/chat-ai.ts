@@ -1,7 +1,8 @@
 import createDebug from 'debug';
 import { DatabaseService } from './database';
 import { escapeMarkdownV2 } from '../utils/markdown';
-
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
 const debug = createDebug('bot:chat-ai');
 
 interface ChatSession {

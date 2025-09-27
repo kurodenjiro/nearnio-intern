@@ -6,6 +6,7 @@
   "author": "Mark Pavlov (https://github.com/sollidy)",
   "homepage": "https://github.com/sollidy/telegram-bot-vercel-boilerplate",
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.38",
     "@prisma/client": "^5.7.1",
     "@vercel/node": "^5.1.16",
     "ai": "^5.0.56",

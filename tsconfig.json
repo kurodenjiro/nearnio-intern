@@ -8,7 +8,9 @@
     "sourceMap": true,
     "outDir": "public",
     "lib": ["esnext", "dom"],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
   "exclude": ["node_modules"]
 }
