@@ -586,11 +586,33 @@ export const startSetup = async (ctx: Context) => {
 
 
 export const handleMessage = async (ctx: Context) => {
-  // Handle text messages if needed
-  // For now, just acknowledge the message
-  await ctx.reply('Please use the /setup command to configure your preferences.');
-};
+  try {
+    const userId = ctx.from?.id;
+    if (!userId) return;
 
+    const chatAIService = ChatAIService.getInstance();
+    
+    // Check if user has an active chat session
+    const isActive = await chatAIService.isChatActive(userId);
+    
+    if (isActive) {
+      // Process the message as a chat message
+      const result = await chatAIService.processMessage(userId, ctx.message && 'text' in ctx.message ? ctx.message.text : '');
+      
+      if (result.success) {
+        await ctx.reply(result.response, { parse_mode: 'MarkdownV2' });
+      } else {
+        await ctx.reply(result.response);
+      }
+    } else {
+      // Handle as regular message
+      await ctx.reply('Please use the /setup command to configure your preferences.');
+    }
+  } catch (error) {
+    debug('Error handling message:', error);
+    await ctx.reply('An error occurred while processing your message.');
+  }
+};
 export { createBountyRangeKeyboard, createCategoryKeyboard, createProjectTypeKeyboard };
 
 
