@@ -271,7 +271,7 @@ const handleCategorySelection = async (ctx: any, state: any, callbackData: strin
   // Automatically proceed to next step after category selection
   state.step = 'projectType';
   
-  await ctx.reply(
+  await ctx.editMessageText(
     `✅ Categories set to: ${escapeMarkdownV2(state.data.categories.map((cat: string) => mapInternalCategoryToUser(cat)).join(', '))}\n\n` +
     `*Step 3: Project Type*\n` +
     `What type of projects are you interested in?\n\n` +
@@ -347,7 +347,7 @@ const handleBountyRangeSelection = async (ctx: any, state: any, callbackData: st
   
   const rangeText = max ? `$${min}-$${max}` : `$${min}+`;
   
-  await ctx.reply(
+  await ctx.editMessageText(
     `✅ Bounty range set to: ${escapeMarkdownV2(rangeText)}\n\n` +
     `*Step 2: Categories*\n` +
     `What categories are you interested in?\n\n` +
@@ -370,7 +370,7 @@ const handleMinBountySelection = async (ctx: any, state: any, callbackData: stri
   
   const rangeText = `$${min}+`;
   
-  await ctx.reply(
+  await ctx.editMessageText(
     `✅ Minimum bounty set to: ${escapeMarkdownV2(rangeText)}\n\n` +
     `*Step 2: Categories*\n` +
     `What categories are you interested in?\n\n` +
@@ -387,7 +387,7 @@ const handleMinBountySelection = async (ctx: any, state: any, callbackData: stri
 const handleBackToCategories = async (ctx: any, state: any) => {
   state.step = 'categories';
   
-  await ctx.reply(
+  await ctx.editMessageText(
     `*Step 2: Categories*\n` +
     `What categories are you interested in?\n\n` +
     `Select from the buttons below:`,
@@ -403,7 +403,7 @@ const handleBackToCategories = async (ctx: any, state: any) => {
 const handleBackToBountyRange = async (ctx: any, state: any) => {
   state.step = 'bountyRange';
   
-  await ctx.reply(
+  await ctx.editMessageText(
     `*Step 1: Bounty Range*\n` +
     `What's your preferred bounty range?\n\n` +
     `Select from the buttons below:`,

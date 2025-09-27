@@ -50,6 +50,7 @@
     "test-buttons": "ts-node scripts/test-buttons.ts",
     "test-categories-removal": "ts-node scripts/test-categories-removal.ts",
     "test-bounty-keyboard": "ts-node scripts/test-bounty-keyboard.ts",
-    "test-back-navigation": "ts-node scripts/test-back-navigation.ts"
+    "test-back-navigation": "ts-node scripts/test-back-navigation.ts",
+    "test-message-removal": "ts-node scripts/test-message-removal.ts"
   }
 }
