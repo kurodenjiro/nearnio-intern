@@ -53,20 +53,6 @@ If you want to start fresh, use /stop to delete your current preferences first\\
     // Start setup process
     await startSetup(ctx);
     
-    const message = `🎯 *Let's set up your bounty preferences\\!*
-
-I'll ask you a few questions to customize your notifications\\.
-
-*Step 1: Bounty Range*
-What bounty range are you interested in?
-
-Select from the buttons below:`;
-    
-    await ctx.replyWithMarkdownV2(message, { 
-      parse_mode: 'MarkdownV2',
-      reply_markup: createBountyRangeKeyboard()
-    });
-    
   } catch (error) {
     debug('Error in setup command:', error);
     await ctx.reply('❌ An error occurred. Please try again later.');

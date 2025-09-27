@@ -52,6 +52,7 @@
     "test-bounty-keyboard": "ts-node scripts/test-bounty-keyboard.ts",
     "test-back-navigation": "ts-node scripts/test-back-navigation.ts",
     "test-message-removal": "ts-node scripts/test-message-removal.ts",
-    "test-bounty-elements-removal": "ts-node scripts/test-bounty-elements-removal.ts"
+    "test-bounty-elements-removal": "ts-node scripts/test-bounty-elements-removal.ts",
+    "verify-setup-fix": "ts-node scripts/verify-setup-fix.ts"
   }
 }
