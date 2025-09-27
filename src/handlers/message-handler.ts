@@ -4,6 +4,7 @@ import { DatabaseService } from '../services/database';
 import { UserPreferences } from '../types/superteam';
 import { escapeMarkdownV2 } from '../utils/markdown';
 import { ReminderService } from '../services/reminder';
+import { SubmissionReminderService } from '../services/submission-reminder';
 import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 
 const debug = createDebug('bot:message-handler');
@@ -199,6 +200,16 @@ export const handleCallbackQuery = async (ctx: any) => {
 
     if (callbackData.startsWith('stop_reminder_')) {
       await handleStopReminder(ctx, callbackData);
+      return;
+    }
+
+    if (callbackData.startsWith('add_submission_reminder_')) {
+      await handleAddSubmissionReminder(ctx, callbackData);
+      return;
+    }
+
+    if (callbackData.startsWith('stop_submission_reminder_')) {
+      await handleStopSubmissionReminder(ctx, callbackData);
       return;
     }
 
@@ -580,8 +591,6 @@ export const handleMessage = async (ctx: Context) => {
 
 export { createBountyRangeKeyboard, createCategoryKeyboard, createProjectTypeKeyboard };
 
-// Import submission reminder service
-import { SubmissionReminderService } from '../services/submission-reminder';
 
 // Add submission reminder handlers
 const handleAddSubmissionReminder = async (ctx: any, callbackData: string) => {
