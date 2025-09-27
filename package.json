@@ -55,7 +55,6 @@
     "test-bounty-elements-removal": "ts-node scripts/test-bounty-elements-removal.ts",
     "verify-setup-fix": "ts-node scripts/verify-setup-fix.ts",
     "test-submission-reminder-button": "ts-node scripts/test-submission-reminder-button.ts",
-    "test-back-buttons": "ts-node scripts/test-back-buttons.ts",
-    "test-setup-command": "ts-node scripts/test-setup-command.ts"
+    "test-back-button-navigation": "ts-node scripts/test-back-button-navigation.ts"
   }
 }
