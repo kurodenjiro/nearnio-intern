@@ -237,7 +237,7 @@ Use these commands to get started:
 
 Let's get started\\! Use /setup to configure your preferences\\.`;
 
-    await ctx.replyWithMarkdownV2(message, { parse_mode: 'MarkdownV2' });
+    await ctx.reply(message, { parse_mode: 'MarkdownV2' });
   }
 
   async sendHelpMessage(ctx: Context): Promise<void> {
@@ -268,6 +268,6 @@ Let's get started\\! Use /setup to configure your preferences\\.`;
 • Use /pause when you're busy to avoid notifications
 • Use /agent to chat with AI about specific listings\\.`;
 
-    await ctx.replyWithMarkdownV2(message, { parse_mode: 'MarkdownV2' });
+    await ctx.reply(message, { parse_mode: 'MarkdownV2' });
   }
 } 
