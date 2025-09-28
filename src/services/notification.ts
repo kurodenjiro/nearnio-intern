@@ -253,6 +253,10 @@ Let's get started\\! Use /setup to configure your preferences\\.`;
 • /stats \\- View your notification statistics
 • /help \\- Show this help message
 
+🤖 *AI Chat:*
+• /agent {sponsor}/{id} \\- Start AI chat about a specific listing
+• /stopchat \\- Stop active AI chat session
+
 ⚙️ *Management:*
 • /pause \\- Pause notifications temporarily
 • /resume \\- Resume notifications
@@ -261,7 +265,8 @@ Let's get started\\! Use /setup to configure your preferences\\.`;
 💡 *Tips:*
 • Set realistic bounty ranges to avoid spam
 • Choose specific skills for better matches
-• Use /pause when you're busy to avoid notifications\\.`;
+• Use /pause when you're busy to avoid notifications
+• Use /agent to chat with AI about specific listings\\.`;
 
     await ctx.replyWithMarkdownV2(message, { parse_mode: 'MarkdownV2' });
   }
