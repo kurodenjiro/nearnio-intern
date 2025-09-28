@@ -254,7 +254,7 @@ Let's get started\\! Use /setup to configure your preferences\\.`;
 • /help \\- Show this help message
 
 🤖 *AI Chat:*
-• /agent {sponsor}/{id} \\- Start AI chat about a specific listing
+• /agent \{sponsor\}/\{id\} \\- Start AI chat about a specific listing
 • /stopchat \\- Stop active AI chat session
 
 ⚙️ *Management:*
